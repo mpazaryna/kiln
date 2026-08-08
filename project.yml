@@ -1,0 +1,164 @@
+name: Kiln
+options:
+  bundleIdPrefix: land.paz
+  deploymentTarget:
+    iOS: "26.0"
+    macOS: "26.0"
+  xcodeVersion: "26.0"
+  generateEmptyDirectories: true
+  groupSortPosition: top
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    GENERATE_INFOPLIST_FILE: true
+    ENABLE_USER_SCRIPT_SANDBOXING: false
+    DEVELOPMENT_TEAM: KDZZFKGF55
+    CODE_SIGN_STYLE: Automatic
+    DEAD_CODE_STRIPPING: true
+    SWIFT_EMIT_LOC_STRINGS: true
+
+# No packages yet — deliberately. Kiln targets FoundationModels, a system
+# framework with no package, no build-tool plugin, and no CI friction.
+#
+# When mlx-swift arrives (see ADR-002, the Neural half of the name), pin it with an
+# explicit upper bound and commit spm/Package.resolved. `from:` is a floor, not a
+# pin: a clean clone resolves to the newest 0.x, and mlx-swift 0.31.5+ ships a
+# CudaBuild build-tool plugin requiring interactive "Trust & Enable" that headless
+# CI cannot grant. Locally that is bypassed with -skipPackagePluginValidation.
+
+targetTemplates:
+  AppBase:
+    preBuildScripts:
+      - name: "Regenerate xcodeproj (XcodeGen)"
+        script: |
+          if command -v xcodegen >/dev/null 2>&1; then
+            cd "${SRCROOT}"
+            xcodegen generate --quiet 2>/dev/null || echo "warning: xcodegen generate failed"
+          fi
+        shell: /bin/sh
+        basedOnDependencyAnalysis: true
+        inputFiles:
+          - $(SRCROOT)/project.yml
+        outputFiles:
+          - $(SRCROOT)/Kiln.xcodeproj/project.pbxproj
+    sources:
+      - path: Kiln
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_NAME: Kiln
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_KEY_CFBundleDisplayName: Kiln
+        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: false
+      configs:
+        Debug:
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+
+targets:
+  Kiln-iOS:
+    type: application
+    platform: iOS
+    templates:
+      - AppBase
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: land.paz.kiln
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: false
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+
+  Kiln-macOS:
+    type: application
+    platform: macOS
+    templates:
+      - AppBase
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: land.paz.kiln
+        CODE_SIGN_ENTITLEMENTS: Kiln-macOS.entitlements
+        ENABLE_HARDENED_RUNTIME: true
+        ENABLE_APP_SANDBOX: true
+
+  KilnTests-iOS:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: KilnTests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: land.paz.KilnTests
+        PRODUCT_NAME: KilnTests
+        GENERATE_INFOPLIST_FILE: true
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Kiln.app/Kiln"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: Kiln-iOS
+
+  KilnTests-macOS:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: KilnTests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: land.paz.KilnTests
+        PRODUCT_NAME: KilnTests
+        GENERATE_INFOPLIST_FILE: true
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Kiln.app/Contents/MacOS/Kiln"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: Kiln-macOS
+
+schemes:
+  Kiln-iOS:
+    build:
+      targets:
+        Kiln-iOS: all
+        KilnTests-iOS: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - KilnTests-iOS
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  Kiln-macOS:
+    build:
+      targets:
+        Kiln-macOS: all
+        KilnTests-macOS: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      debugEnabled: false
+      targets:
+        - KilnTests-macOS
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
