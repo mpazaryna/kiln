@@ -50,8 +50,59 @@ struct AppleIntelligenceModel: KilnModel {
         do {
             let response = try await session.respond(to: prompt)
             return response.content
+        } catch let error as LanguageModelSession.GenerationError {
+            throw KilnModelError.generationFailed(
+                issue: Self.issue(for: error),
+                detail: Self.detail(for: error)
+            )
         } catch {
-            throw KilnModelError.generationFailed(error.localizedDescription)
+            throw KilnModelError.generationFailed(
+                issue: .other,
+                detail: error.localizedDescription
+            )
         }
+    }
+
+    /// Maps Apple's `GenerationError` onto Kiln's provider-neutral issues.
+    ///
+    /// This mapping is the whole reason `KilnGenerationIssue` exists. Flattening these
+    /// to `localizedDescription` loses the one distinction that changes what you do
+    /// next — `assetsUnavailable` (broken environment) reads identically to
+    /// `guardrailViolation` (rephrase the prompt) once it is a string.
+    static func issue(for error: LanguageModelSession.GenerationError) -> KilnGenerationIssue {
+        switch error {
+        case .assetsUnavailable: .assetsUnavailable
+        case .exceededContextWindowSize: .contextWindowExceeded
+        case .guardrailViolation: .guardrailViolation
+        case .refusal: .refused
+        case .rateLimited: .rateLimited
+        case .concurrentRequests: .concurrentRequests
+        case .unsupportedLanguageOrLocale: .unsupportedLanguageOrLocale
+        case .decodingFailure, .unsupportedGuide: .decodingFailure
+        @unknown default: .other
+        }
+    }
+
+    /// Every case carries a `Context` with the framework's own debug text. Surfacing it
+    /// is not optional in a lab — the missing-asset failure names the exact asset
+    /// (`com.apple.fm.language.instruct_300m.safety`), which is the difference between
+    /// a diagnosis and a shrug.
+    static func detail(for error: LanguageModelSession.GenerationError) -> String? {
+        let context: LanguageModelSession.GenerationError.Context? = switch error {
+        case .assetsUnavailable(let c),
+             .exceededContextWindowSize(let c),
+             .guardrailViolation(let c),
+             .rateLimited(let c),
+             .concurrentRequests(let c),
+             .unsupportedLanguageOrLocale(let c),
+             .decodingFailure(let c),
+             .unsupportedGuide(let c):
+            c
+        case .refusal(_, let c):
+            c
+        @unknown default:
+            nil
+        }
+        return context?.debugDescription
     }
 }

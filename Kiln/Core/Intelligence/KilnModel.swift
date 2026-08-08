@@ -22,14 +22,91 @@ enum KilnModelAvailability: Equatable, Sendable {
     }
 }
 
+/// Why a single generation failed, in provider-neutral terms.
+///
+/// These are deliberately not Apple-specific. An MLX provider can exhaust a context
+/// window or refuse a prompt too, and comparing *how* providers fail is as much the
+/// point of this lab as comparing what they produce. Mapping each provider's native
+/// error into this shape is the provider's job, not the view's.
+enum KilnGenerationIssue: Equatable, Sendable {
+    /// A required model asset is missing or unreadable. Distinct from unavailability:
+    /// the provider reported itself ready, then could not load something it needed.
+    case assetsUnavailable
+    case contextWindowExceeded
+    /// A safety guardrail rejected the prompt or the response.
+    case guardrailViolation
+    /// The model declined to answer, with an explanation available.
+    case refused
+    case rateLimited
+    case concurrentRequests
+    case unsupportedLanguageOrLocale
+    /// The response could not be decoded into the requested shape.
+    case decodingFailure
+    case other
+
+    var summary: String {
+        switch self {
+        case .assetsUnavailable: "Required model assets are missing"
+        case .contextWindowExceeded: "Prompt exceeded the context window"
+        case .guardrailViolation: "Blocked by a safety guardrail"
+        case .refused: "The model declined to answer"
+        case .rateLimited: "Rate limited"
+        case .concurrentRequests: "Too many concurrent requests"
+        case .unsupportedLanguageOrLocale: "Unsupported language or locale"
+        case .decodingFailure: "The response could not be decoded"
+        case .other: "Generation failed"
+        }
+    }
+
+    /// What the operator can actually do about it. `nil` where there is no user action.
+    var recovery: String? {
+        switch self {
+        case .assetsUnavailable:
+            // The common cause in practice: the Simulator's model catalog has no
+            // guardrail assets, so availability reports .available and generation then
+            // fails on a missing dependency. Run on a real device or the Mac app.
+            "Run on a real device or the macOS app — the Simulator often lacks the guardrail model assets."
+        case .contextWindowExceeded:
+            "Shorten the prompt or the instructions."
+        case .guardrailViolation:
+            "Rephrase the prompt."
+        case .rateLimited, .concurrentRequests:
+            "Wait a moment and fire again."
+        case .refused, .unsupportedLanguageOrLocale, .decodingFailure, .other:
+            nil
+        }
+    }
+}
+
 enum KilnModelError: Error, LocalizedError {
+    /// The provider cannot run at all — checked before the request is sent.
     case unavailable(String)
-    case generationFailed(String)
+    /// The provider accepted the request and could not complete it. `detail` carries the
+    /// framework's own debug text, which a lab should show rather than swallow.
+    case generationFailed(issue: KilnGenerationIssue, detail: String?)
 
     var errorDescription: String? {
         switch self {
-        case .unavailable(let why): "Model unavailable: \(why)"
-        case .generationFailed(let why): "Generation failed: \(why)"
+        case .unavailable(let why):
+            "Model unavailable: \(why)"
+        case .generationFailed(let issue, _):
+            issue.summary
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .unavailable: nil
+        case .generationFailed(let issue, _): issue.recovery
+        }
+    }
+
+    /// Raw framework text, kept separate from the human-readable summary so the UI can
+    /// show both without one drowning the other.
+    var detail: String? {
+        switch self {
+        case .unavailable: nil
+        case .generationFailed(_, let detail): detail
         }
     }
 }

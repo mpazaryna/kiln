@@ -33,6 +33,13 @@ three patterns everything else inherits.
 - Xcode 26
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
 
+> **Run live prompts on a real device or the macOS app, not the iOS Simulator.**
+> The Simulator's model catalog frequently lacks the guardrail assets
+> (`com.apple.fm.language.instruct_300m.safety`). Availability still reports
+> `.available`, and generation then fails with `assetsUnavailable`. Kiln names this
+> case explicitly rather than reporting a generic error — see
+> [ADR-003](.orchestra/adr/ADR-003-availability-is-not-sufficiency.md).
+
 ## Build
 
 `Kiln.xcodeproj` is generated and **not** committed. Generate it first:

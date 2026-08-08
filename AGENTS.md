@@ -41,6 +41,15 @@ Views never name a concrete provider. They resolve one through `ModelRegistry` a
 the protocol. This holds even though there is currently one conformance — comparison is
 the point of the lab.
 
+### Availability does not guarantee generation (ADR-003)
+
+A provider can report `.available` and still fail the request — the Simulator commonly
+lacks guardrail assets, so generation fails with `assetsUnavailable` after a clean
+pre-flight. Never flatten a failure to `localizedDescription`. Map it to a
+`KilnGenerationIssue` and carry summary, recovery, and raw detail separately.
+
+**Run live prompts on a real device or the macOS app, not the iOS Simulator.**
+
 ### Tests must be deterministic
 
 The default test run must not depend on whether Apple Intelligence is enabled, downloaded,
@@ -97,6 +106,7 @@ KilnTests/                    # Deterministic unit tests
 - `ADR-000-platform-config` — all layout values in configs (read before any UI work)
 - `ADR-001-no-viewmodels-in-swiftui` — SwiftUI state management
 - `ADR-002-model-provider-seam` — the `KilnModel` protocol and why it exists early
+- `ADR-003-availability-is-not-sufficiency` — failure mapping; Simulator asset caveat
 
 ---
 

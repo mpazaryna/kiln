@@ -90,11 +90,20 @@ struct HelloKilnView: View {
     // MARK: - View State
     /// Mutually exclusive states as an enum, so the view cannot render "running" and
     /// "failed" at once and no boolean pair can drift out of sync (ADR-001).
+    /// A failure split into what happened, what to do, and the raw framework text.
+    /// Keeping `detail` separate is what lets the UI show a one-line diagnosis without
+    /// discarding the evidence underneath it.
+    private struct Failure {
+        let summary: String
+        let recovery: String?
+        let detail: String?
+    }
+
     private enum RunState {
         case idle
         case running
         case success(String)
-        case failed(String)
+        case failed(Failure)
     }
 
     @State private var prompt = "Explain what a kiln does, in two sentences."
@@ -173,12 +182,30 @@ struct HelloKilnView: View {
             .padding(config.cardPadding)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: config.cornerRadius))
 
-        case .failed(let message):
-            ContentUnavailableView(
-                "Firing failed",
-                systemImage: "exclamationmark.triangle",
-                description: Text(message)
-            )
+        case .failed(let failure):
+            ScrollView {
+                VStack(alignment: .leading, spacing: config.sectionSpacing) {
+                    ContentUnavailableView(
+                        failure.summary,
+                        systemImage: "exclamationmark.triangle",
+                        description: failure.recovery.map(Text.init)
+                    )
+
+                    if let detail = failure.detail {
+                        // Shown, not hidden behind a disclosure. In a lab the raw
+                        // framework text is the most valuable thing on screen — it is
+                        // what names the missing asset or the offending guide.
+                        Text(detail)
+                            .font(config.captionFont)
+                            .monospaced()
+                            .textSelection(.enabled)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(config.cardPadding)
+                            .background(.quaternary, in: RoundedRectangle(cornerRadius: config.cornerRadius))
+                    }
+                }
+            }
             .frame(minHeight: config.resultMinHeight)
         }
     }
@@ -200,8 +227,18 @@ struct HelloKilnView: View {
         do {
             let text = try await registry.selected.respond(to: prompt, instructions: nil)
             state = .success(text)
+        } catch let error as KilnModelError {
+            state = .failed(Failure(
+                summary: error.errorDescription ?? "Firing failed",
+                recovery: error.recoverySuggestion,
+                detail: error.detail
+            ))
         } catch {
-            state = .failed(error.localizedDescription)
+            state = .failed(Failure(
+                summary: "Firing failed",
+                recovery: nil,
+                detail: error.localizedDescription
+            ))
         }
     }
 }
