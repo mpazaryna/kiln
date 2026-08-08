@@ -57,16 +57,30 @@ detail that has changed before.)
 
 ### Stage 3 — archive + TestFlight: deliberately not yet
 
-Two reasons, one practical and one about what Kiln is.
+Kiln is a lab. Nobody installs it from TestFlight. Archiving every push would spend
+minutes producing builds no one runs, and would fill a TestFlight the app does not need.
+Build + test is the whole signal at this stage.
 
-**Practical:** archiving requires an App Store Connect app record for `land.paz.kiln`,
-which does not exist. Build and test need no such record. Stage 1+2 can land today;
-stage 3 needs a product decision first.
+The build-number stamping in `ci_post_clone.sh` is written and ready for the day that
+changes, because it must run *before* XcodeGen — but it is inert until Cloud archives.
 
-**About Kiln:** it is a lab. Nobody installs it from TestFlight. Archiving every push
-would spend minutes producing builds no one runs. The build-number stamping in
-`ci_post_clone.sh` is written and ready for the day that changes, because it must run
-*before* XcodeGen — but it is inert until Cloud actually archives.
+### Correction: an App Store Connect record is required regardless
+
+An earlier draft of this ADR claimed that archiving needs an App Store Connect app record
+while build and test do not, and used that as a reason to defer stage 3. **That is
+wrong.** An app record must exist for Xcode Cloud at all — Apple's requirement is that
+"an app record for your app must exist in App Store Connect, or you must have the
+required role or permission to create one."
+
+In practice the onboarding assistant checks whether the bundle identifier already exists
+and creates the record for you if it does not, using the project's bundle ID and an SKU
+it asks for. So it is a step inside workflow creation rather than separate preparation —
+but it is not optional, and it does mean **setting up CI claims `land.paz.kiln` in App
+Store Connect**. Bundle identifiers are not meaningfully reusable once registered, so
+that is a decision to make deliberately rather than discover.
+
+The staging decision is unchanged; only its justification was faulty. Deferring the
+archive still rests on what Kiln is, which was always the stronger of the two reasons.
 
 ## Workflow topology
 
@@ -113,6 +127,9 @@ the first time one is added.
   frequency changes by an order of magnitude.
 - **Cloud requires a remote repository.** Kiln must be pushed to GitHub before any of this
   can run.
+- **Cloud requires an App Store Connect app record**, created during onboarding from the
+  project's bundle identifier. Enabling CI therefore registers `land.paz.kiln`. The bundle
+  ID in `project.yml` must match the record exactly, or builds fail to associate.
 - The post-clone hook is currently three-quarters absent by design — no secrets, no
   `Package.resolved`, no plugin trust. Adding `mlx-swift` (ADR-002) reinstates all three.
   Its comment block names them so that day is a lookup rather than a rediscovery.
