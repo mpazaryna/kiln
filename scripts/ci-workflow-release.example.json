@@ -1,0 +1,93 @@
+{
+  "_README": [
+    "The Release workflow: build, test, archive, TestFlight. Companion to ci-workflow.example.json",
+    "(the PR Gate). Same script: `create-xcode-cloud-workflow.sh create <this file>`.",
+    "Fill the four <...> ids from the discovery subcommands. The script strips this key before POSTing.",
+    "",
+    "THE ONE-WAY DOOR — read before creating this workflow:",
+    "  'buildDistributionAudience' MUST be 'APP_STORE_ELIGIBLE'.",
+    "",
+    "  'INTERNAL_ONLY' stamps every uploaded build buildAudienceType: INTERNAL_ONLY, permanently",
+    "  and immutably. Such a build reaches internal testers and can NEVER be added to an external",
+    "  group — its externalBuildState is NOT_APPLICABLE and there is no undo. A sibling project",
+    "  stranded thirteen builds this way by choosing the cautious-looking option during setup.",
+    "  App Store Connect gives no useful signal: the external add-build picker just says 'No builds",
+    "  available', and the real reason is visible only via the iris/v1/builds/<id> API.",
+    "",
+    "  APP_STORE_ELIGIBLE still distributes to internal testers. It costs nothing and keeps the",
+    "  external path open. There is no reason to choose INTERNAL_ONLY.",
+    "",
+    "WHY THIS IS A SEPARATE WORKFLOW FROM THE GATE (ADR-004): archiving on every pull request",
+    "costs minutes and produces builds nobody installs. The gate proves; this ships.",
+    "",
+    "TEST BEFORE ARCHIVE, both isRequiredToPass: a red suite must stop the upload rather than",
+    "ship past it. Action order in this array is the execution order.",
+    "",
+    "BUILD NUMBERS: ci_post_clone.sh stamps CURRENT_PROJECT_VERSION from $CI_BUILD_NUMBER before",
+    "XcodeGen runs, because the archive takes CFBundleVersion from the generated project and not",
+    "from the environment variable. Creating this workflow makes that stamping load-bearing, and",
+    "makes Cloud the sole owner of the build number. A local archive during Cloud's tenure needs",
+    "the number reconciled deliberately or App Store Connect rejects the duplicate.",
+    "",
+    "NOT YET VERIFIED — reconcile on first run: the ANY_MAC destination, and whether a macOS",
+    "archive needs a distinct action shape from the iOS one. The iOS values are confirmed."
+  ],
+  "data": {
+    "type": "ciWorkflows",
+    "attributes": {
+      "name": "Release",
+      "description": "Build, test, archive and upload Kiln to TestFlight from main. Build number from $CI_BUILD_NUMBER.",
+      "isEnabled": true,
+      "isLockedForEditing": false,
+      "clean": false,
+      "containerFilePath": "Kiln.xcodeproj",
+      "actions": [
+        {
+          "name": "Test iOS",
+          "actionType": "TEST",
+          "destination": "ANY_IOS_SIMULATOR",
+          "scheme": "Kiln-iOS",
+          "platform": "IOS",
+          "isRequiredToPass": true
+        },
+        {
+          "name": "Test macOS",
+          "actionType": "TEST",
+          "destination": "ANY_MAC",
+          "scheme": "Kiln-macOS",
+          "platform": "MACOS",
+          "isRequiredToPass": true
+        },
+        {
+          "name": "Archive iOS",
+          "actionType": "ARCHIVE",
+          "buildDistributionAudience": "APP_STORE_ELIGIBLE",
+          "scheme": "Kiln-iOS",
+          "platform": "IOS",
+          "isRequiredToPass": true
+        },
+        {
+          "name": "Archive macOS",
+          "actionType": "ARCHIVE",
+          "buildDistributionAudience": "APP_STORE_ELIGIBLE",
+          "scheme": "Kiln-macOS",
+          "platform": "MACOS",
+          "isRequiredToPass": true
+        }
+      ],
+      "branchStartCondition": {
+        "source": {
+          "isAllMatch": false,
+          "patterns": [{ "pattern": "main", "isPrefix": false }]
+        },
+        "autoCancel": true
+      }
+    },
+    "relationships": {
+      "product": { "data": { "type": "ciProducts", "id": "<PRODUCT_ID from: products>" } },
+      "repository": { "data": { "type": "scmRepositories", "id": "<REPO_ID from: repositories>" } },
+      "xcodeVersion": { "data": { "type": "ciXcodeVersions", "id": "<XCODE_VERSION_ID from: versions>" } },
+      "macOsVersion": { "data": { "type": "ciMacOsVersions", "id": "<MACOS_VERSION_ID from: versions>" } }
+    }
+  }
+}

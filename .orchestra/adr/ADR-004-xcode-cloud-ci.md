@@ -4,7 +4,7 @@ status: accepted
 created_on: 2026-08-08
 ---
 
-# ADR-004: Xcode Cloud CI — adopt build + test now, defer archive
+# ADR-004: Xcode Cloud CI — build + test as a gate, archive on a separate workflow
 
 ## Context
 
@@ -27,7 +27,8 @@ That is what makes a CI test action meaningful rather than a coin flip.
 
 ## Decision
 
-**Adopt Xcode Cloud for build + test. Do not archive or upload yet.**
+**Adopt Xcode Cloud. A PR gate builds and tests; a separate Release workflow archives
+and ships to TestFlight.**
 
 ### Stage 1 — build gate
 
@@ -55,14 +56,55 @@ reports 0 and is rejected. (In that probe `xcodebuild` also exited 70 on its own
 shapes that *do* exit 0, and because which shapes those are is an Xcode implementation
 detail that has changed before.)
 
-### Stage 3 — archive + TestFlight: deliberately not yet
+### Stage 3 — archive + TestFlight: adopted
 
-Kiln is a lab. Nobody installs it from TestFlight. Archiving every push would spend
-minutes producing builds no one runs, and would fill a TestFlight the app does not need.
-Build + test is the whole signal at this stage.
+An earlier version of this ADR deferred stage 3 on the reasoning that "Kiln is a lab,
+nobody installs it from TestFlight." **That was an assumption, and it was wrong.**
+Colleagues and other developers are exactly the audience for a teaching repository, and
+most of them want to *see the thing run* without cloning it, installing XcodeGen,
+supplying their own team ID, and building it.
 
-The build-number stamping in `ci_post_clone.sh` is written and ready for the day that
-changes, because it must run *before* XcodeGen — but it is inert until Cloud archives.
+TestFlight is how a Swift project is demonstrated to people who are not going to build
+it. That is a first-class use for this repo, not an afterthought.
+
+**But archiving stays on a separate workflow from the gate.** The PR Gate does not
+archive: it costs minutes on every pull request and produces builds nobody installs. The
+`Release` workflow archives; the gate proves.
+
+Consequences of turning this on:
+
+- **The build-number stamping in `ci_post_clone.sh` becomes load-bearing.** It must run
+  before XcodeGen, because the archive takes `CFBundleVersion` from the generated project
+  rather than from `$CI_BUILD_NUMBER`. Until now it has been inert.
+- **Exactly one thing may own the build number.** That is now Cloud. Any local archive
+  during Cloud's tenure needs the number reconciled deliberately.
+- **Distribution Preparation must be "App Store Connect".** See the trap below. This is
+  the single most consequential setting in the whole configuration and it cannot be
+  undone per-build.
+
+### Internal vs external testers — decide before inviting anyone
+
+These are different mechanisms and the difference matters here:
+
+- **Internal** — up to 100 App Store Connect users on your team. No Beta App Review.
+  Builds are available within minutes. Right for colleagues you can add to the team.
+- **External** — up to 10,000 testers, invited by email or a public link. **Requires Beta
+  App Review** for the first build of each version. Right for "other developers" at large,
+  and the public link is what makes a teaching repo shareable.
+
+External is the one worth thinking about before committing. Kiln is currently a single
+screen that runs one prompt. "App is incomplete" is a real Beta App Review rejection
+reason, and a lab whose entire UI is a text field and a Fire button is a plausible
+candidate for it. That is an argument for filling out the Playground/Runs surfaces before
+opening an external group — not an argument against TestFlight.
+
+### TestFlight builds expire after 90 days
+
+Whatever a colleague installs stops launching 90 days after upload, with no failure on our
+side except not having shipped. For a demo channel that is acceptable; it just means the
+expiry date is knowable at upload time and belongs on a calendar. If Kiln ever becomes
+something people *depend* on rather than look at, that is the point to consider unlisted
+App Store distribution instead.
 
 ### Correction: an App Store Connect record is required regardless
 
@@ -99,15 +141,16 @@ is unrelated to the project's identity. "Kiln" is long since taken. The store-li
 name has no bearing on the repository name, the bundle identifier, or
 `INFOPLIST_KEY_CFBundleDisplayName` — which is what actually appears under the icon.
 
-The staging decision is unchanged; only its justification was faulty. Deferring the
-archive still rests on what Kiln is, which was always the stronger of the two reasons.
+Both of this ADR's corrections came from reasoning about Apple's tooling from
+documentation rather than from clicking through it. Where the two disagree, the clicking
+wins — record what actually happened, not what the docs imply.
 
 ## Workflow topology
 
 | Workflow | Start condition | Actions |
 |---|---|---|
 | `PR Gate` | **pull requests targeting `main`** | Build + Test (both platforms) |
-| `Release` | manual, later | Build + Test + Archive + TestFlight |
+| `Release` | `main` changes, or manual | Build + Test + Archive + TestFlight |
 
 ### Trigger on pull requests, never on branch-name patterns
 
