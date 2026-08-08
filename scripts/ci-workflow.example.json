@@ -1,0 +1,96 @@
+{
+  "_README": [
+    "Payload for `create-xcode-cloud-workflow.sh create`. The script strips this key before POSTing.",
+    "Fill the four <...> ids from the discovery subcommands (products / repositories / versions).",
+    "",
+    "VERIFIED API LIMITS — inherited from a sibling project that probed the live API, not guesses:",
+    "  - ciProducts does NOT allow CREATE. Onboarding the product and connecting the SCM provider",
+    "    is GUI-only (Xcode > Integrate > Create Workflow). This file cannot bootstrap Xcode Cloud;",
+    "    it configures a product that already exists.",
+    "  - 'environmentVariables' is NOT an attribute on ciWorkflows: 409 ENTITY_ERROR.ATTRIBUTE.UNKNOWN.",
+    "    Irrelevant to Kiln today — it has no secrets — but it will matter the first time one is added.",
+    "  - A TEST action requires testConfig/testDestinations. Omitting it is 409 ATTRIBUTE.REQUIRED.",
+    "    A BUILD action needs no testConfig.",
+    "  - Workflows created via the API do NOT appear in an already-running Xcode session. Editing one",
+    "    from a stale Xcode shows 'this workflow has no actions' and SAVING THERE WIPES THEM.",
+    "    Restart Xcode, or edit on appstoreconnect.apple.com.",
+    "",
+    "NOT YET VERIFIED — reconcile on first run rather than trusting:",
+    "  - pullRequestStartCondition's exact shape. The sibling project shipped a branchStartCondition",
+    "    and its ADR concluded that was the wrong choice; the PR-triggered form below follows that",
+    "    conclusion but has not been POSTed against the live API. If it 409s, run `versions` and",
+    "    compare against a workflow created in the GUI, then correct this file.",
+    "  - destination values for macOS actions ('ANY_MAC'). The iOS values are confirmed.",
+    "",
+    "WHY PULL REQUESTS AND NOT A BRANCH PATTERN (ADR-004): a branch-name pattern silently skips CI",
+    "for any branch named otherwise. It does not error, it does nothing — the worst behaviour",
+    "available to a safety net, because a workflow that never runs produces no red.",
+    "",
+    "NO ARCHIVE ACTION, DELIBERATELY. Kiln is a lab; nobody installs it from TestFlight (ADR-004).",
+    "When one is added it MUST use 'buildDistributionAudience': 'APP_STORE_ELIGIBLE'. The value",
+    "'INTERNAL_ONLY' permanently and immutably stamps every build as internal — there is no",
+    "promotion path and no undo. The cautious-looking option is the trap.",
+    "",
+    "containerFilePath is repo-root relative. Kiln.xcodeproj sits at the root and is gitignored —",
+    "ci_post_clone.sh generates it before project resolution, which is fine."
+  ],
+  "data": {
+    "type": "ciWorkflows",
+    "attributes": {
+      "name": "PR Gate",
+      "description": "Build and test Kiln-iOS and Kiln-macOS on pull requests targeting main. No archive.",
+      "isEnabled": true,
+      "isLockedForEditing": false,
+      "clean": false,
+      "containerFilePath": "Kiln.xcodeproj",
+      "actions": [
+        {
+          "name": "Build iOS",
+          "actionType": "BUILD",
+          "destination": "ANY_IOS_DEVICE",
+          "scheme": "Kiln-iOS",
+          "platform": "IOS",
+          "isRequiredToPass": true
+        },
+        {
+          "name": "Test iOS",
+          "actionType": "TEST",
+          "destination": "ANY_IOS_SIMULATOR",
+          "scheme": "Kiln-iOS",
+          "platform": "IOS",
+          "isRequiredToPass": true
+        },
+        {
+          "name": "Build macOS",
+          "actionType": "BUILD",
+          "destination": "ANY_MAC",
+          "scheme": "Kiln-macOS",
+          "platform": "MACOS",
+          "isRequiredToPass": true
+        },
+        {
+          "name": "Test macOS",
+          "actionType": "TEST",
+          "destination": "ANY_MAC",
+          "scheme": "Kiln-macOS",
+          "platform": "MACOS",
+          "isRequiredToPass": true
+        }
+      ],
+      "pullRequestStartCondition": {
+        "source": { "isAllMatch": true },
+        "destination": {
+          "isAllMatch": false,
+          "patterns": [{ "pattern": "main", "isPrefix": false }]
+        },
+        "autoCancel": true
+      }
+    },
+    "relationships": {
+      "product": { "data": { "type": "ciProducts", "id": "<PRODUCT_ID from: products>" } },
+      "repository": { "data": { "type": "scmRepositories", "id": "<REPO_ID from: repositories>" } },
+      "xcodeVersion": { "data": { "type": "ciXcodeVersions", "id": "<XCODE_VERSION_ID from: versions>" } },
+      "macOsVersion": { "data": { "type": "ciMacOsVersions", "id": "<MACOS_VERSION_ID from: versions>" } }
+    }
+  }
+}

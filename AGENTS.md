@@ -102,7 +102,8 @@ Kiln/
 │   └── Intelligence/         # KilnModel, AppleIntelligenceModel, ModelRegistry
 └── Views/                    # SwiftUI views, one fileprivate config each
 KilnTests/                    # Deterministic unit tests
-scripts/                      # run-tests.sh + lib/xcresult.sh (shared with CI)
+scripts/                      # run-tests.sh, lib/xcresult.sh (shared with CI),
+                              # create-xcode-cloud-workflow.sh (ASC API)
 ci_scripts/                   # Xcode Cloud hooks (post-clone, post-xcodebuild)
 .orchestra/adr/               # Architecture decisions
 ```
