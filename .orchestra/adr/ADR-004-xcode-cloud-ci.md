@@ -168,9 +168,16 @@ opted out of by accident.
 
 Both were paid for elsewhere. They are recorded here so Kiln never pays again.
 
-**Distribution Preparation is a one-way door.** Any workflow that should ever reach
-external testers or the App Store must use **"App Store Connect"** preparation — never
-"TestFlight (Internal Testing Only)". The latter stamps every build
+**Distribution Preparation is a one-way door, and the trap is the DEFAULT.** Any workflow
+that should ever reach external testers or the App Store must use **"App Store Connect"**
+preparation — never "TestFlight (Internal Testing Only)".
+
+Observed on Kiln, 2026-08-08: the workflow Xcode's onboarding assistant generates arrives
+with **"TestFlight (Internal Testing Only)" preselected on every Archive action**. A
+sibling project's ADR framed this as a cautious choice someone makes; that understates it.
+It is what you get by not choosing. Check both radio buttons on every Archive action of
+every assistant-generated workflow before the first upload — after that it is too late for
+the builds already sent. The latter stamps every build
 `buildAudienceType: INTERNAL_ONLY` permanently and immutably at upload. There is no
 promotion path and no undo; a sibling project stranded thirteen builds that way. The
 cautious-looking option is the trap. When a valid build refuses to appear in the external
