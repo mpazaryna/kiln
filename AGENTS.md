@@ -56,8 +56,10 @@ The default test run must not depend on whether Apple Intelligence is enabled, d
 or in a good mood. Stub `KilnModel` for logic tests. Live-model runs, when they exist, go
 in a separately-invoked category.
 
-A run is a pass only if it exits 0 **and** executed at least one test. `xcodebuild` exits
-0 when a filter matches nothing — a green run that tested nothing is worse than no run.
+A run is a pass only if it exits 0 **and** executed at least one test. Use
+`./scripts/run-tests.sh`, which enforces this via `scripts/lib/xcresult.sh` — the same
+library Xcode Cloud's post-xcodebuild hook sources, so the check cannot drift between
+them. A green run that tested nothing is worse than no run.
 
 ### On-device only
 
@@ -76,6 +78,10 @@ learning from it, because that is the point.
 
 ```bash
 xcodegen generate
+
+./scripts/run-tests.sh              # macOS, guarded (default)
+./scripts/run-tests.sh ios          # iOS Simulator, guarded
+./scripts/run-tests.sh all
 
 xcodebuild -project Kiln.xcodeproj -scheme Kiln-macOS -configuration Debug build
 xcodebuild -project Kiln.xcodeproj -scheme Kiln-iOS -configuration Debug \
@@ -96,6 +102,8 @@ Kiln/
 │   └── Intelligence/         # KilnModel, AppleIntelligenceModel, ModelRegistry
 └── Views/                    # SwiftUI views, one fileprivate config each
 KilnTests/                    # Deterministic unit tests
+scripts/                      # run-tests.sh + lib/xcresult.sh (shared with CI)
+ci_scripts/                   # Xcode Cloud hooks (post-clone, post-xcodebuild)
 .orchestra/adr/               # Architecture decisions
 ```
 
@@ -107,6 +115,7 @@ KilnTests/                    # Deterministic unit tests
 - `ADR-001-no-viewmodels-in-swiftui` — SwiftUI state management
 - `ADR-002-model-provider-seam` — the `KilnModel` protocol and why it exists early
 - `ADR-003-availability-is-not-sufficiency` — failure mapping; Simulator asset caveat
+- `ADR-004-xcode-cloud-ci` — CI staging, zero-test guard, Distribution Preparation trap
 
 ---
 
