@@ -72,12 +72,32 @@ wrong.** An app record must exist for Xcode Cloud at all — Apple's requirement
 "an app record for your app must exist in App Store Connect, or you must have the
 required role or permission to create one."
 
-In practice the onboarding assistant checks whether the bundle identifier already exists
-and creates the record for you if it does not, using the project's bundle ID and an SKU
-it asks for. So it is a step inside workflow creation rather than separate preparation —
-but it is not optional, and it does mean **setting up CI claims `land.paz.kiln` in App
-Store Connect**. Bundle identifiers are not meaningfully reusable once registered, so
-that is a decision to make deliberately rather than discover.
+Apple's documentation implies the onboarding assistant will create the record for you
+from the project's bundle ID. **In practice, on Xcode 26, it did not.** The assistant
+refused to advance and reported the app *name* as invalid — a misleading error, since no
+variation of the name helped. The fix was to create the app in App Store Connect first,
+then return to Xcode.
+
+So the working order is:
+
+1. **Create the app record in App Store Connect** — Apps → + → New App — before touching
+   Xcode Cloud.
+2. Then run the Xcode Cloud onboarding, which finds the existing record instead of trying
+   to make one.
+
+Do not rely on the assistant to bootstrap the record, and do not trust its error text:
+it collapses several distinct failure modes into a complaint about whichever field it
+happens to highlight. Creating the app directly gives specific errors; the assistant
+gives one unhelpful line.
+
+This also means **setting up CI claims `land.paz.kiln` in App Store Connect**. Bundle
+identifiers are not meaningfully reusable once registered, so that is a decision to make
+deliberately rather than discover.
+
+Note the App Store Connect *app name* is globally unique across the entire App Store and
+is unrelated to the project's identity. "Kiln" is long since taken. The store-listing
+name has no bearing on the repository name, the bundle identifier, or
+`INFOPLIST_KEY_CFBundleDisplayName` — which is what actually appears under the icon.
 
 The staging decision is unchanged; only its justification was faulty. Deferring the
 archive still rests on what Kiln is, which was always the stronger of the two reasons.
