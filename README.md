@@ -49,6 +49,33 @@ xcodegen generate
 open Kiln.xcodeproj
 ```
 
+**If you cloned this, change the signing team.** `project.yml` hardcodes the author's
+Apple Developer team, and signing will fail until you replace it with your own — find it
+in Xcode under Settings → Accounts, or at
+[developer.apple.com/account](https://developer.apple.com/account) under Membership.
+
+```yaml
+settings:
+  base:
+    DEVELOPMENT_TEAM: KDZZFKGF55   # ← yours
+```
+
+You will also want your own bundle identifier, since `land.paz.kiln` is already claimed:
+change `bundleIdPrefix` and both `PRODUCT_BUNDLE_IDENTIFIER` values. Re-run
+`xcodegen generate` after either edit.
+
+Or skip signing altogether. Ad-hoc signing builds and tests the macOS app without any
+developer account — enough to read the code, run it, and see the suite go green; not
+enough to install on a device:
+
+```bash
+xcodebuild test -project Kiln.xcodeproj -scheme Kiln-macOS -configuration Debug \
+  DEVELOPMENT_TEAM="" CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual
+```
+
+All three overrides are needed together — clearing the team while signing style stays
+`Automatic` still fails.
+
 Or from the command line:
 
 ```bash
