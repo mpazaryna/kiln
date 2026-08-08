@@ -105,8 +105,32 @@ KilnTests/                    # Deterministic unit tests
 scripts/                      # run-tests.sh, lib/xcresult.sh (shared with CI),
                               # create-xcode-cloud-workflow.sh (ASC API)
 ci_scripts/                   # Xcode Cloud hooks (post-clone, post-xcodebuild)
-.orchestra/adr/               # Architecture decisions
+.orchestra/                   # Agent knowledge base — see .orchestra/README.md
+├── adr/                      # Architecture decisions
+├── work/                     # Per-work-item PRD, spec, gherkin (TEMPLATES/ to copy)
+├── uml/                      # Mermaid diagrams
+└── devlog/                   # Chronological session journal, by quarter
 ```
+
+---
+
+## Orchestra SDLC — required workflow
+
+Work in this project follows the Orchestra lifecycle, served by the `orchestra` MCP
+server. `.orchestra/` is the shared knowledge base — read the ADRs, and the roadmap once
+it exists, before acting on any work item.
+
+Before starting anything non-trivial:
+
+1. `orchestra_list_stages` to orient — intake → prd → spec → gherkin → plan → execute.
+2. `orchestra_list_skills`, then `orchestra_get_skill` for the activity at hand, and
+   follow it as the playbook.
+3. Respect the gates (`orchestra_get_gates`): a PRD before a spec, a spec before
+   implementation, and explicit human approval at each one.
+
+Record sessions with `orchestra_devlog_entry` (write the file it returns to
+`.orchestra/devlog/`). Record significant decisions as ADRs. See
+[ADR-005](.orchestra/adr/ADR-005-the-score.md).
 
 ---
 
@@ -117,6 +141,7 @@ ci_scripts/                   # Xcode Cloud hooks (post-clone, post-xcodebuild)
 - `ADR-002-model-provider-seam` — the `KilnModel` protocol and why it exists early
 - `ADR-003-availability-is-not-sufficiency` — failure mapping; Simulator asset caveat
 - `ADR-004-xcode-cloud-ci` — CI staging, zero-test guard, Distribution Preparation trap
+- `ADR-005-the-score` — the Orchestra SDLC itself; why the score is not ADR-000 here
 
 ---
 

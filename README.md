@@ -20,6 +20,16 @@ The third is the one that carries the roadmap. **Language** is the Apple Foundat
 Models half, built now. **Neural** is the MLX half, deliberately deferred — see
 [ADR-002](.orchestra/adr/ADR-002-model-provider-seam.md).
 
+## Brief
+
+**Vision:** A workbench for looking closely at on-device models — load one, fire a prompt
+at it, and read what comes back. Apple Foundation Models first, an MLX-backed provider
+second, both reached through the same seam so they can be compared rather than merely
+used.
+**Audience:** Colleagues and other developers, for whom this is a teaching repository —
+readable enough to learn the patterns from, installable enough to see running without
+cloning it.
+
 ## Status
 
 Early. `Hello, Kiln` runs a prompt against Apple Intelligence and shows the response, on
