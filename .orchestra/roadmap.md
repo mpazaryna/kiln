@@ -22,13 +22,19 @@ network entitlement, no keys.
 
 ## Milestones
 
-| Material | Location | Status |
-|----------|----------|--------|
-| Language | .orchestra/work/language/prd.md | In Progress |
-| Distribution | .orchestra/work/distribution/prd.md | In Progress |
-| Workbench | .orchestra/work/workbench/prd.md | Not Started |
-| Neural | .orchestra/work/neural/prd.md | Not Started |
-| iOS 27 | .orchestra/work/ios-27/prd.md | Not Started |
+| Material | Location | Ticket | Status |
+|----------|----------|--------|--------|
+| Language | .orchestra/work/language/prd.md | SHE-24 | In Progress |
+| Distribution | .orchestra/work/distribution/prd.md | SHE-25 | In Progress |
+| Workbench | .orchestra/work/workbench/prd.md | SHE-26 | Not Started |
+| Neural | .orchestra/work/neural/prd.md | SHE-27 | Not Started |
+| iOS 27 | .orchestra/work/ios-27/prd.md | SHE-28 | Not Started |
+
+## Planning
+
+This file is the source of truth. [Linear](https://linear.app/workshed/project/kiln-5274e9117490/overview)
+mirrors these five as milestones for human scheduling and status — it carries no plan of
+its own. When the two disagree, this file wins and Linear gets corrected.
 
 ## References
 

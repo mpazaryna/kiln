@@ -1,5 +1,5 @@
 ---
-ticket: workbench
+ticket: SHE-26
 status: draft
 created_on: 2026-08-08
 ---

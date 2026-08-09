@@ -68,9 +68,21 @@ that is a deliberate, reviewed change to the sandbox — not a quiet default.
 
 ### Public repository
 
-Nothing from private projects crosses over: no client data, no proprietary models, no
-internal identifiers. Assume every commit message and comment is read by someone
-learning from it, because that is the point.
+Written to be read, not to be contributed to. People arrive at a repository like this
+one for the patterns, so the standard is legibility: assume every commit message and
+comment is read by someone learning from it, because that is the point.
+
+**Never crosses over** — client data, proprietary models, credentials, and anything from
+private projects that would leak a client's business rather than teach a technique.
+
+**Fine to include** — Linear ticket references (`SHE-24`), issue URLs, and links to the
+workshed project. They are identifiers for planning, not secrets, and a reader who
+cannot open them loses nothing from the code.
+
+The earlier blanket ban on "internal identifiers" swept up ticket references along with
+the things that actually matter, which made it a rule to step over rather than follow. A
+hard rule that is routinely ignored costs the rules next to it their weight — and the
+two above it, on-device only and no secrets, are ones this project genuinely enforces.
 
 ---
 
