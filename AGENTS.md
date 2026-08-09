@@ -117,6 +117,7 @@ KilnTests/                    # Deterministic unit tests
 scripts/                      # run-tests.sh, lib/xcresult.sh (shared with CI),
                               # create-xcode-cloud-workflow.sh (ASC API)
 ci_scripts/                   # Xcode Cloud hooks (post-clone, post-xcodebuild)
+CHANGELOG.md                  # Keep a Changelog — changes to Kiln, not to its environment
 .orchestra/                   # Agent knowledge base — see .orchestra/README.md
 ├── adr/                      # Architecture decisions
 ├── work/                     # Per-work-item PRD, spec, gherkin (TEMPLATES/ to copy)
