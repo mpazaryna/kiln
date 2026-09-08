@@ -70,11 +70,23 @@ struct AppleIntelligenceModel: KilnModel {
             )
         }
 
+        if !options.tools.isEmpty, !supports(.toolCalling) {
+            throw KilnModelError.generationFailed(
+                issue: .unsupportedCapability,
+                detail: "\(displayName) does not advertise the tool-calling capability, "
+                      + "so the \(options.tools.count) offered tool(s) cannot be registered."
+            )
+        }
+
         // A session is created per call rather than held across calls. Multi-turn
         // context is a lab subject in its own right — sharing a session here would
         // silently make every run depend on the ones before it, which is exactly the
         // variable a lab needs to control rather than inherit.
-        let session = LanguageModelSession(model: model, instructions: instructions)
+        let session = LanguageModelSession(
+            model: model,
+            tools: Self.tools(for: options.tools),
+            instructions: instructions
+        )
 
         let clock = ContinuousClock()
         let started = clock.now
@@ -105,6 +117,17 @@ struct AppleIntelligenceModel: KilnModel {
     }
 
     // MARK: - Request mapping
+
+    /// Neutral identifiers in, Apple's `Tool` values out. The switch is exhaustive on
+    /// purpose: adding a `KilnToolID` should fail to compile here until this provider
+    /// decides whether it can host it.
+    static func tools(for ids: Set<KilnToolID>) -> [any Tool] {
+        ids.sorted { $0.rawValue < $1.rawValue }.map { id in
+            switch id {
+            case .coneTemperature: ConeTemperatureTool()
+            }
+        }
+    }
 
     static func generationOptions(from options: KilnRunOptions) -> GenerationOptions {
         GenerationOptions(

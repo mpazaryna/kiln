@@ -178,6 +178,15 @@ struct HelloKilnView: View {
             }
             .disabled(!registry.selected.supports(.reasoning))
 
+            Toggle("Cone tool", isOn: Binding(
+                get: { options.tools.contains(.coneTemperature) },
+                set: { isOn in
+                    if isOn { options.tools.insert(.coneTemperature) }
+                    else { options.tools.remove(.coneTemperature) }
+                }
+            ))
+            .disabled(!registry.selected.supports(.toolCalling))
+
             Spacer()
             runButton
         }

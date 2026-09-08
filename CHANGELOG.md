@@ -27,6 +27,13 @@ in `.orchestra/devlog/` instead.
   disabled rather than failing on submit.
 - Swift 6 language mode. The concurrency annotations the code already carried
   (`Sendable`, `@MainActor`) are now enforced by the compiler rather than decorative.
+- A `Tool` conformance — Orton cone → firing temperature. The logic is provider-neutral
+  and pure (`ConeTemperature`); only the adapter knows `FoundationModels`. Tools cross the
+  seam as `KilnToolID` identifiers, so a future provider maps the same tool to its own
+  shape. Offering a tool is independent of permitting calls, because the difference
+  between the two is the experiment: asked for cone 06 with the tool allowed the model
+  answers 1828 °F and the transcript reads `toolCalls → toolOutput → response`; with
+  calls disallowed it answers 1,100 °F from memory and the transcript reads `response`.
 
 - `Hello, Kiln` — a prompt, a Fire button, and a response, on iOS and macOS. The whole
   app so far, and deliberately so: it establishes config-driven layout, enum view state,

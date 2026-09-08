@@ -59,6 +59,23 @@ enum KilnToolCalling: String, CaseIterable, Sendable {
     case allowed, disallowed
 }
 
+/// A tool Kiln can offer a provider, named neutrally.
+///
+/// The seam trades in identifiers rather than in any framework's tool type. Apple's
+/// `Tool` protocol, an MLX provider's equivalent, and a remote model's function-calling
+/// schema are three different shapes; what they share is *which* tool is on offer.
+/// Each provider maps these to its own representation, and a provider that cannot host
+/// a given tool simply does not offer it — a capability that can be absent (ADR-002).
+enum KilnToolID: String, CaseIterable, Sendable {
+    case coneTemperature
+
+    var displayName: String {
+        switch self {
+        case .coneTemperature: "Cone temperature"
+        }
+    }
+}
+
 /// The knobs a lab needs on a single run. Provider-neutral: a provider that cannot honour
 /// one maps it to nothing rather than failing, except where the request is meaningless
 /// (asking for reasoning from a model without it), which is a capability error.
@@ -67,6 +84,11 @@ struct KilnRunOptions: Equatable, Sendable {
     var maximumResponseTokens: Int?
     var toolCalling: KilnToolCalling = .disallowed
     var reasoning: KilnReasoningLevel?
+
+    /// Which tools to hand the provider. Independent of `toolCalling` on purpose:
+    /// offering a tool and then forbidding calls is a legitimate experiment, and seeing
+    /// the model ignore an available tool is exactly the kind of thing a lab is for.
+    var tools: Set<KilnToolID> = []
 
     static let `default` = KilnRunOptions()
 }

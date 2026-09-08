@@ -112,6 +112,7 @@ Kiln/
 ├── Core/
 │   ├── Configuration/        # PlatformConfig.swift — ALL layout values
 │   └── Intelligence/         # KilnModel, AppleIntelligenceModel, ModelRegistry
+│       └── Tools/            # Tool logic (neutral) + its Tool conformance (Apple)
 └── Views/                    # SwiftUI views, one fileprivate config each
 KilnTests/                    # Deterministic unit tests
 scripts/                      # run-tests.sh, lib/xcresult.sh (shared with CI),
