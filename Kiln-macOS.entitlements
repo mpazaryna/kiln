@@ -4,5 +4,20 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+
+	<!--
+	  Required for the image attachment picker. A sandboxed app cannot read a
+	  user-chosen file without this: Powerbox hands over access only when the app
+	  declares it, so `.fileImporter` silently does nothing otherwise.
+
+	  Read-only on purpose. Kiln reads images it is given and never writes them back,
+	  so the read-write variant would grant more than the feature needs.
+
+	  Note what is still absent, and deliberately: there is NO network entitlement.
+	  This widens the sandbox to files the user explicitly picks, which is not the same
+	  as letting the app reach off the device. The on-device-only rule stands.
+	-->
+	<key>com.apple.security.files.user-selected.read-only</key>
+	<true/>
 </dict>
 </plist>

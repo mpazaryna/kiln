@@ -55,6 +55,13 @@ the tool, what does that error actually map to — use `./scripts/probe.sh` rath
 adding a live assertion to the default suite. The probe links `Core/Intelligence`, so
 what it reports is what the app does.
 
+**The probe is unsandboxed, and that is a blind spot.** It cannot validate anything the
+sandbox governs — file access, entitlements, security scopes. Two bugs have already hidden
+there: an image read needs its security scope held open across `respond`, and
+`.fileImporter` needs `com.apple.security.files.user-selected.read-only` or it does nothing
+at all. Both looked fine in the probe. Anything touching files or entitlements has to be
+checked in the installed app.
+
 ### Tests must be deterministic
 
 The default test run must not depend on whether Apple Intelligence is enabled, downloaded,
@@ -104,6 +111,7 @@ xcodegen generate
 ./scripts/probe.sh tool             # cone tool offered, calling allowed
 ./scripts/probe.sh offered          # same tool, calling disallowed — compare the two
 ./scripts/probe.sh reasoning        # request reasoning; fails on-device by design
+./scripts/probe.sh vision [path]    # attach an image (defaults to the app icon)
 ./scripts/probe.sh errors           # provoke real failures; check they survive the mapper
 ./scripts/probe.sh pcc              # TRAPS without Apple's managed entitlement
 

@@ -78,6 +78,19 @@ struct AppleIntelligenceModel: KilnModel {
             )
         }
 
+        // Each attachment names the capability it needs, so the pre-flight is a loop
+        // rather than a growing list of special cases.
+        for attachment in options.attachments {
+            let needed = attachment.requiredCapability
+            guard supports(needed) else {
+                throw KilnModelError.generationFailed(
+                    issue: .unsupportedCapability,
+                    detail: "\(displayName) does not advertise \(needed.rawValue), "
+                          + "which \"\(attachment.label)\" requires."
+                )
+            }
+        }
+
         // A session is created per call rather than held across calls. Multi-turn
         // context is a lab subject in its own right — sharing a session here would
         // silently make every run depend on the ones before it, which is exactly the
@@ -91,12 +104,21 @@ struct AppleIntelligenceModel: KilnModel {
         let clock = ContinuousClock()
         let started = clock.now
 
+        // A sandboxed app reaching a user-chosen file needs the security scope held open
+        // across the read. The framework reads the image lazily inside `respond`, so the
+        // scope has to outlive the call — not just the `Attachment` construction.
+        let scoped = options.attachments.filter { $0.url.startAccessingSecurityScopedResource() }
+        defer { scoped.forEach { $0.url.stopAccessingSecurityScopedResource() } }
+
         do {
+            let attachments = options.attachments.map(Self.attachment(for:))
             let response = try await session.respond(
-                to: prompt,
                 options: Self.generationOptions(from: options),
                 contextOptions: Self.contextOptions(from: options)
-            )
+            ) {
+                prompt
+                for attachment in attachments { attachment }
+            }
             return KilnRun(
                 content: response.content,
                 usage: Self.usage(from: response.usage),
@@ -126,6 +148,15 @@ struct AppleIntelligenceModel: KilnModel {
             switch id {
             case .coneTemperature: ConeTemperatureTool()
             }
+        }
+    }
+
+    /// Kiln's neutral attachment becomes Apple's. `.label` is what an `ImageReference`
+    /// in a generated response later resolves against, so it is carried, not dropped.
+    static func attachment(for attachment: KilnAttachment) -> Attachment<ImageAttachmentContent> {
+        switch attachment {
+        case .image(let url, let label):
+            Attachment(imageURL: url).label(label)
         }
     }
 

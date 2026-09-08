@@ -76,6 +76,34 @@ enum KilnToolID: String, CaseIterable, Sendable {
     }
 }
 
+/// Something handed to the model alongside the prompt.
+///
+/// Neutral by design — a URL and a label, not any framework's attachment type. Each case
+/// names the capability a provider must advertise to accept it, so the pre-flight is a
+/// property of the attachment rather than a rule the provider has to remember.
+enum KilnAttachment: Equatable, Sendable {
+    case image(url: URL, label: String)
+
+    var label: String {
+        switch self {
+        case .image(_, let label): label
+        }
+    }
+
+    var url: URL {
+        switch self {
+        case .image(let url, _): url
+        }
+    }
+
+    /// What the provider must advertise before this attachment can be sent.
+    var requiredCapability: KilnModelCapability {
+        switch self {
+        case .image: .vision
+        }
+    }
+}
+
 /// The knobs a lab needs on a single run. Provider-neutral: a provider that cannot honour
 /// one maps it to nothing rather than failing, except where the request is meaningless
 /// (asking for reasoning from a model without it), which is a capability error.
@@ -89,6 +117,10 @@ struct KilnRunOptions: Equatable, Sendable {
     /// offering a tool and then forbidding calls is a legitimate experiment, and seeing
     /// the model ignore an available tool is exactly the kind of thing a lab is for.
     var tools: Set<KilnToolID> = []
+
+    /// Images and other material sent with the prompt. Ordered, because the model reads
+    /// them in sequence alongside the text.
+    var attachments: [KilnAttachment] = []
 
     static let `default` = KilnRunOptions()
 }

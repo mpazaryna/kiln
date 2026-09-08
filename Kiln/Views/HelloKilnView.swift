@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Local layout config (ADR-000). Flattens shared values from `BasePlatformConfig` and
 /// adds the properties only this view needs, so the view body reads named properties and
@@ -23,6 +24,7 @@ fileprivate struct HelloLayoutConfig {
     let resultMinHeight: CGFloat
     let controlSpacing: CGFloat
     let metricSpacing: CGFloat
+    let thumbnailSize: CGFloat
 
     #if os(iOS)
     static func current(_ sizeClass: UserInterfaceSizeClass?) -> Self {
@@ -40,7 +42,8 @@ fileprivate struct HelloLayoutConfig {
                 promptMinHeight: 120,
                 resultMinHeight: 200,
                 controlSpacing: 16,
-                metricSpacing: 14
+                metricSpacing: 14,
+                thumbnailSize: 56
             )
             : Self(  // iPhone
                 screenPadding: base.screenPadding,
@@ -54,7 +57,8 @@ fileprivate struct HelloLayoutConfig {
                 promptMinHeight: 90,
                 resultMinHeight: 140,
                 controlSpacing: 12,
-                metricSpacing: 10
+                metricSpacing: 10,
+                thumbnailSize: 44
             )
     }
     #else
@@ -72,7 +76,8 @@ fileprivate struct HelloLayoutConfig {
             promptMinHeight: 140,
             resultMinHeight: 240,
             controlSpacing: 16,
-            metricSpacing: 14
+            metricSpacing: 14,
+            thumbnailSize: 56
         )
     }
     #endif
@@ -119,6 +124,7 @@ struct HelloKilnView: View {
     @State private var prompt = "Explain what a kiln does, in two sentences."
     @State private var state: RunState = .idle
     @State private var options = KilnRunOptions.default
+    @State private var isChoosingImage = false
 
     // MARK: - Body
     var body: some View {
@@ -126,6 +132,7 @@ struct HelloKilnView: View {
             header
             promptEditor
             controls
+            attachments
             result
             Spacer(minLength: 0)
         }
@@ -187,10 +194,54 @@ struct HelloKilnView: View {
             ))
             .disabled(!registry.selected.supports(.toolCalling))
 
+            Button("Attach image") { isChoosingImage = true }
+                .disabled(!registry.selected.supports(.vision))
+
             Spacer()
             runButton
         }
         .controlSize(config.controlSize)
+        .fileImporter(
+            isPresented: $isChoosingImage,
+            allowedContentTypes: [.image]
+        ) { result in
+            // The picker is what grants a sandboxed app access to the file. The URL is
+            // stored and the security scope is opened later, around the read itself —
+            // see AppleIntelligenceModel.run.
+            if case .success(let url) = result {
+                options.attachments = [.image(url: url, label: url.lastPathComponent)]
+            }
+        }
+    }
+
+    /// What is going to the model besides the text. Shown rather than implied: an
+    /// attachment silently riding along is the kind of hidden variable a lab exists to
+    /// eliminate.
+    @ViewBuilder
+    private var attachments: some View {
+        if !options.attachments.isEmpty {
+            HStack(spacing: config.controlSpacing) {
+                ForEach(options.attachments, id: \.label) { attachment in
+                    AsyncImage(url: attachment.url) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: config.cornerRadius).fill(.quaternary)
+                    }
+                    .frame(width: config.thumbnailSize, height: config.thumbnailSize)
+                    .clipShape(RoundedRectangle(cornerRadius: config.cornerRadius))
+
+                    Text(attachment.label)
+                        .font(config.captionFont)
+                        .foregroundStyle(.secondary)
+                }
+                Button("Remove", systemImage: "xmark.circle.fill") {
+                    options.attachments = []
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+                Spacer()
+            }
+        }
     }
 
     private var runButton: some View {

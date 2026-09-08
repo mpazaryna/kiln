@@ -36,7 +36,19 @@ in `.orchestra/devlog/` instead.
   calls disallowed it answers 1,100 °F from memory and the transcript reads `response`.
 - `KilnProbe`, a command-line target that links `Core/Intelligence` and answers questions
   about the framework without launching the GUI — `./scripts/probe.sh capabilities`.
+- Vision. Images cross the seam as `KilnAttachment` — a URL and a label, never a framework
+  attachment type — and each attachment names the capability it requires, so the
+  pre-flight is a loop rather than a list of special cases. The provider holds the
+  security scope open across the read, which a sandboxed app needs and the unsandboxed
+  probe never revealed.
 
+### Security
+
+- `com.apple.security.files.user-selected.read-only` added to the macOS entitlements, so
+  Powerbox can hand the sandboxed app an image the user picks — without it `.fileImporter`
+  silently does nothing. Read-only, because Kiln never writes the images back. Still no
+  network entitlement: this widens the sandbox to explicitly-chosen files, which is not
+  the same as reaching off the device.
 - `Hello, Kiln` — a prompt, a Fire button, and a response, on iOS and macOS. The whole
   app so far, and deliberately so: it establishes config-driven layout, enum view state,
   and a provider reached through a protocol rather than named directly.

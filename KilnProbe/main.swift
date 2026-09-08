@@ -125,6 +125,25 @@ case "errors":
 
     print("\n(PCC is deliberately not exercised here — it traps. See `probe.sh pcc`.)")
 
+case "vision":
+    // Goes through Kiln's seam, not the raw framework — the point is to exercise the
+    // mapping and the sandbox-scope handling, not just prove the API exists.
+    heading("Vision — image attached through KilnRunOptions")
+    let imagePath = rest.isEmpty
+        ? "Kiln/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png"
+        : rest
+    let url = URL(fileURLWithPath: imagePath).standardizedFileURL
+    guard FileManager.default.fileExists(atPath: url.path) else {
+        print("no such image: \(url.path)")
+        break
+    }
+    print("image:      \(url.lastPathComponent)")
+    print("vision cap: \(AppleIntelligenceModel().supports(.vision))")
+
+    var visionOptions = KilnRunOptions.default
+    visionOptions.attachments = [.image(url: url, label: "image")]
+    await fire("Describe this image in one sentence.", options: visionOptions)
+
 case "pcc":
     // WARNING: this will terminate the process unless the managed entitlement
     // `com.apple.developer.private-cloud-compute` has been granted by Apple. The
@@ -164,6 +183,7 @@ default:
       offered        fire with the tool offered but calling disallowed
       reasoning      request a reasoning level (fails on-device by design)
       errors         provoke real failures and check they survive the mapper
+      vision [path]  attach an image to the prompt (defaults to the app icon)
       pcc            Private Cloud Compute — TRAPS without Apple's managed entitlement
     """)
 }
