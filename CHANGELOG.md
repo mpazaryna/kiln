@@ -16,6 +16,18 @@ in `.orchestra/devlog/` instead.
 
 ### Added
 
+- macOS/iOS 27 support on the new `FoundationModels` surface. `KilnModel` gained
+  `capabilities`, read from the framework at call time — availability says the provider
+  will take a request, capability says it will take *this* one (ADR-003 amendment).
+- `KilnRun` replaces the bare `String` return: content, token usage, transcript entry
+  kinds, and duration. The evidence around an answer is half of what a lab is for, and
+  `return response.content` discarded all of it.
+- `KilnRunOptions` — tool calling, reasoning level, temperature, response cap. Controls
+  are gated on advertised capability, so an option the model cannot honour is shown
+  disabled rather than failing on submit.
+- Swift 6 language mode. The concurrency annotations the code already carried
+  (`Sendable`, `@MainActor`) are now enforced by the compiler rather than decorative.
+
 - `Hello, Kiln` — a prompt, a Fire button, and a response, on iOS and macOS. The whole
   app so far, and deliberately so: it establishes config-driven layout, enum view state,
   and a provider reached through a protocol rather than named directly.
@@ -37,6 +49,16 @@ in `.orchestra/devlog/` instead.
 
 ### Changed
 
+- `LanguageModelSession.GenerationError` (deprecated in 27) migrated to
+  `LanguageModelError`. Not a rename: `assetsUnavailable` moved to
+  `SystemLanguageModel.Error`, `concurrentRequests` and `decodingFailure` are gone, and
+  `timeout` / `unsupportedCapability` / `unsupportedTranscriptContent` arrived. Kiln keeps
+  the departed cases — they still describe how a provider can fail.
+- Tool calling now defaults to `.disallowed`. Kiln registers no tools, so a tool search is
+  pure waste (SHE-29).
+- Tests rebuilt around what iOS 27 leaves constructible. The new error payloads have no
+  public initializers, so ADR-003's "construct the error, assert the mapping" pattern no
+  longer works; `LanguageModelSession.Usage` still does, so token mapping stays covered.
 - The public-repository rule now distinguishes what it protects (client data,
   proprietary models, credentials) from what it had swept up by accident (Linear ticket
   references). A hard rule that is routinely stepped over costs the rules beside it

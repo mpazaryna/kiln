@@ -98,3 +98,46 @@ available" would teach the wrong thing in a repository meant for teaching.
   `CudaBuild` build-tool plugin gate documented in savvy's ADR-013. Pin it with an
   explicit upper bound and commit `spm/Package.resolved` when that day comes; `from:` is
   a floor, not a pin.
+
+---
+
+## Amendment — 2026-09-07: the seam held, and the system protocol is not what we thought
+
+Kiln moved to the iOS/macOS 27 `FoundationModels` surface. Two things this ADR asserted
+can now be checked against reality.
+
+**The cost claim was right, and it is now measured.** Raising the deployment target to
+27.0 produced exactly four deprecation warnings, all four in `AppleIntelligenceModel.swift`.
+Nothing in the views, the registry, the protocol, or the config. A framework migration was
+absorbed by one file — which is the entire argument this ADR made before there was any way
+to test it.
+
+**The prediction about `LanguageModel` was wrong.** This ADR said: *"When Kiln adopts iOS
+27, `AppleIntelligenceModel` becomes a thin bridge onto the system protocol and the views
+do not change."* The views did not change. But `AppleIntelligenceModel` is not a bridge,
+because the protocol is not shaped the way we guessed:
+
+```swift
+public protocol LanguageModel: Sendable {
+  associatedtype Executor: LanguageModelExecutor where Self == Self.Executor.Model
+  var capabilities: LanguageModelCapabilities { get }
+  var executorConfiguration: Self.Executor.Configuration { get }
+}
+```
+
+It is a model *descriptor* paired with a `LanguageModelExecutor` that does the generating.
+It is how you supply a **custom** model *into* a `LanguageModelSession` — not how you talk
+to the system one. Apple Intelligence already is the system model; `AppleIntelligenceModel`
+consumes `LanguageModelSession` and has no reason to conform.
+
+This ADR was explicit that it was "deliberately **not** an attempt to predict that
+protocol's signature," and that caution turned out to be load-bearing. The seam survived
+precisely because it was designed against what Kiln needs rather than against a guess at
+Apple's shape.
+
+**Consequence for Neural (SHE-27):** `LanguageModel` + `LanguageModelExecutor` is Apple's
+sanctioned custom-provider path, so an MLX provider has two possible homes — beside
+`KilnModel` as a second conformance, or underneath `LanguageModelSession` as an executor.
+The second gets tools, guided generation and transcript handling for free and makes MLX
+comparable to Apple Intelligence through one session API. That is a real decision and it
+belongs in the Neural PRD, not here.

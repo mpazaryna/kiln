@@ -38,9 +38,9 @@ three patterns everything else inherits.
 
 ## Requirements
 
-- iOS 26 / macOS 26 or later
+- iOS 27 / macOS 27 or later
 - Apple Silicon, with Apple Intelligence enabled, for live runs
-- Xcode 26
+- Xcode 27
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
 
 > **Run live prompts on a real device or the macOS app, not the iOS Simulator.**

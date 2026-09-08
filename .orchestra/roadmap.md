@@ -28,7 +28,7 @@ network entitlement, no keys.
 | Distribution | .orchestra/work/distribution/prd.md | SHE-25 | In Progress |
 | Workbench | .orchestra/work/workbench/prd.md | SHE-26 | Not Started |
 | Neural | .orchestra/work/neural/prd.md | SHE-27 | Not Started |
-| iOS 27 | .orchestra/work/ios-27/prd.md | SHE-28 | Not Started |
+| iOS 27 | .orchestra/work/ios-27/prd.md | SHE-28 | In Progress |
 
 ## Planning
 

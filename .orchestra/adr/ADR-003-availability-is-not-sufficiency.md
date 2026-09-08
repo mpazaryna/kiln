@@ -92,3 +92,77 @@ the macOS app.
 - Tests construct `GenerationError` cases directly — `Context` has a public initializer —
   so the mapping is verified without a live model. This is the pattern for all provider
   error handling: deterministic tests over real error values.
+
+---
+
+## Amendment — 2026-09-07: capability is a third stage, and the mapping lost its tests
+
+iOS 27 extends this ADR's argument in one direction and undercuts its testing strategy in
+another.
+
+### Availability → capability → generation
+
+This ADR established two stages: a provider can be *available* and still fail to
+*generate*. iOS 27 adds a stage between them. `SystemLanguageModel.capabilities` on macOS
+27 reports `toolCalling`, `vision` and `guidedGeneration` — and **not** `reasoning`. Ask
+for a `ReasoningLevel` anyway and the request fails after a clean availability pre-flight:
+
+```
+LanguageModelError.unsupportedCapability
+"The selected model does not support reasoning. Consider trying again with a different model."
+```
+
+So the chain is now: **available** (the provider will take a request) → **capable** (it
+will take *this* request) → **generated** (it actually produced something). `KilnModel`
+gained a `capabilities` property for the middle stage, read at call time for the same
+reason availability is. The payoff is a UI that disables a control it cannot honour rather
+than a lab that spends a request to discover the same thing.
+
+### The framework's recovery text is thinner than ours
+
+`LanguageModelError` carries `errorDescription` and `recoverySuggestion` of its own, which
+looks at first like it makes `KilnGenerationIssue.recovery` redundant. It does not. The one
+error we provoked live returned `recoverySuggestion: nil` on the case whose fix is most
+obvious to a human. Kiln's own recovery text does *more* work under iOS 27, not less.
+
+### The mapping is no longer testable by construction
+
+This ADR recorded, as the pattern for all provider error handling: *"Tests construct
+`GenerationError` cases directly — `Context` has a public initializer — so the mapping is
+verified without a live model."*
+
+**That no longer holds.** `GenerationError` is deprecated in favour of `LanguageModelError`,
+whose payload structs (`GuardrailViolation`, `Timeout`, `UnsupportedCapability`, …) expose
+public properties and **zero public initializers**. A test cannot build one, so
+`AppleIntelligenceModel.issue(for:)` and `detail(for:)` are covered only by reading.
+
+`LanguageModelSession.Usage` *is* still constructible, so response/token mapping stays
+deterministic, and the suite was rebuilt along that line. But this is a genuine coverage
+loss on exactly the code this ADR exists to protect, and it is recorded here rather than
+quietly absorbed. If a future provider makes the same mapping testable again — an MLX
+provider's errors will be Kiln's own types — that is an argument for routing more of the
+taxonomy through types we control.
+
+### The limit case: Private Cloud Compute traps
+
+Verified 2026-09-07. `PrivateCloudComputeLanguageModel` reports `isAvailable == true`,
+advertises `.reasoning`, and returns a healthy `quotaUsage` — all before any entitlement
+exists. Opening a session then does this:
+
+```
+FoundationModels/ErrorConversion.swift:140: Fatal error:
+Missing entitlement: com.apple.developer.private-cloud-compute
+```
+
+Not a throw. A trap. Every pre-flight this ADR argues for said yes, and the call still
+terminated the process.
+
+That is worth stating plainly because it bounds what this ADR can promise. Mapping
+failures well protects you from failures that *arrive as errors*. It does nothing for an
+API that asserts. The only defence is refusing to make the call — which means an
+entitlement check, not a capability check, has to gate PCC, and it has to be a build-time
+fact rather than a runtime one.
+
+`com.apple.developer.private-cloud-compute` is a **managed** entitlement: requested from
+Apple, subject to eligibility review. So the gate is knowable at build time, which is the
+one piece of good news here.

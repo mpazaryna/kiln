@@ -2,16 +2,16 @@ name: Kiln
 options:
   bundleIdPrefix: land.paz
   deploymentTarget:
-    iOS: "26.0"
-    macOS: "26.0"
-  xcodeVersion: "26.0"
+    iOS: "27.0"
+    macOS: "27.0"
+  xcodeVersion: "27.0"
   generateEmptyDirectories: true
   groupSortPosition: top
   createIntermediateGroups: true
 
 settings:
   base:
-    SWIFT_VERSION: "5.0"
+    SWIFT_VERSION: "6.0"
     GENERATE_INFOPLIST_FILE: true
     ENABLE_USER_SCRIPT_SANDBOXING: false
     DEVELOPMENT_TEAM: KDZZFKGF55

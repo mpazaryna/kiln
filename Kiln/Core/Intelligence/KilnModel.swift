@@ -22,6 +22,86 @@ enum KilnModelAvailability: Equatable, Sendable {
     }
 }
 
+/// What a provider can actually do, as opposed to whether it is switched on.
+///
+/// This is the third stage of a chain ADR-003 started with two. Availability says the
+/// provider will accept a request; capability says it will accept *this* request. On
+/// macOS 27 the system model reports `.available` and advertises `toolCalling`, `vision`
+/// and `guidedGeneration` — but **not** `reasoning`, so asking for a reasoning level
+/// throws `unsupportedCapability` after a clean pre-flight. Checking first turns that
+/// throw into a disabled control.
+enum KilnModelCapability: String, CaseIterable, Sendable {
+    case reasoning
+    case toolCalling
+    case vision
+    case guidedGeneration
+
+    var displayName: String {
+        switch self {
+        case .reasoning: "Reasoning"
+        case .toolCalling: "Tool calling"
+        case .vision: "Vision"
+        case .guidedGeneration: "Guided generation"
+        }
+    }
+}
+
+/// How much thinking the model may do before answering. Only meaningful on a provider
+/// whose capabilities include `.reasoning`.
+enum KilnReasoningLevel: String, CaseIterable, Sendable {
+    case light, moderate, deep
+}
+
+/// Whether the model may call tools. Kiln registers none, so `.disallowed` is the honest
+/// default — see the SHE-29 finding, where a session with zero tools narrated a search
+/// for tools and put that narration in the answer.
+enum KilnToolCalling: String, CaseIterable, Sendable {
+    case allowed, disallowed
+}
+
+/// The knobs a lab needs on a single run. Provider-neutral: a provider that cannot honour
+/// one maps it to nothing rather than failing, except where the request is meaningless
+/// (asking for reasoning from a model without it), which is a capability error.
+struct KilnRunOptions: Equatable, Sendable {
+    var temperature: Double?
+    var maximumResponseTokens: Int?
+    var toolCalling: KilnToolCalling = .disallowed
+    var reasoning: KilnReasoningLevel?
+
+    static let `default` = KilnRunOptions()
+}
+
+/// Token accounting for one run. `reasoning` is carried even where it is always zero,
+/// because watching it stay zero on a model without the capability is itself the lesson.
+struct KilnTokenUsage: Equatable, Sendable {
+    let inputTokens: Int
+    let cachedInputTokens: Int
+    let outputTokens: Int
+    let reasoningTokens: Int
+}
+
+/// The kinds of entry a run can add to a transcript.
+///
+/// Kiln records the *kind* rather than the payload. The payloads are provider-specific
+/// and mostly opaque (`Transcript.Reasoning` exposes an `Action` with no public members),
+/// while the sequence of kinds is exactly what a lab wants to compare across providers.
+enum KilnTranscriptEntryKind: String, Sendable {
+    case instructions, prompt, response, reasoning, toolCalls, toolOutput, unknown
+}
+
+/// One completed run: the answer, plus the evidence around it.
+///
+/// `respond` used to return `String`. It threw away everything the framework said about
+/// *how* the answer was produced — which, in a lab, is most of the value. iOS 27 added
+/// `usage` and a `.reasoning` transcript entry; both land here without the protocol
+/// changing shape again.
+struct KilnRun: Sendable {
+    let content: String
+    let usage: KilnTokenUsage?
+    let entries: [KilnTranscriptEntryKind]
+    let duration: Duration
+}
+
 /// Why a single generation failed, in provider-neutral terms.
 ///
 /// These are deliberately not Apple-specific. An MLX provider can exhaust a context
@@ -42,6 +122,14 @@ enum KilnGenerationIssue: Equatable, Sendable {
     case unsupportedLanguageOrLocale
     /// The response could not be decoded into the requested shape.
     case decodingFailure
+    /// The request asked for something this model cannot do — iOS 27's
+    /// `LanguageModelError.unsupportedCapability`. The live instance of this is asking
+    /// the macOS 27 system model for a reasoning level it does not advertise.
+    case unsupportedCapability
+    /// The transcript contained content this model cannot consume (iOS 27).
+    case unsupportedTranscriptContent
+    /// The request exceeded its time budget (iOS 27).
+    case timedOut
     case other
 
     var summary: String {
@@ -54,11 +142,18 @@ enum KilnGenerationIssue: Equatable, Sendable {
         case .concurrentRequests: "Too many concurrent requests"
         case .unsupportedLanguageOrLocale: "Unsupported language or locale"
         case .decodingFailure: "The response could not be decoded"
+        case .unsupportedCapability: "This model does not support what was asked"
+        case .unsupportedTranscriptContent: "The transcript contains unsupported content"
+        case .timedOut: "The request timed out"
         case .other: "Generation failed"
         }
     }
 
     /// What the operator can actually do about it. `nil` where there is no user action.
+    ///
+    /// Worth keeping even though iOS 27's errors carry their own `recoverySuggestion`:
+    /// the live `unsupportedCapability` returns `nil` for it, so the one case where the
+    /// fix is most obvious to a human is the case the framework says nothing about.
     var recovery: String? {
         switch self {
         case .assetsUnavailable:
@@ -72,7 +167,12 @@ enum KilnGenerationIssue: Equatable, Sendable {
             "Rephrase the prompt."
         case .rateLimited, .concurrentRequests:
             "Wait a moment and fire again."
-        case .refused, .unsupportedLanguageOrLocale, .decodingFailure, .other:
+        case .unsupportedCapability:
+            "Turn the unsupported option off, or select a model that advertises it."
+        case .timedOut:
+            "Try again, or shorten the prompt."
+        case .refused, .unsupportedLanguageOrLocale, .decodingFailure,
+             .unsupportedTranscriptContent, .other:
             nil
         }
     }
@@ -121,11 +221,11 @@ enum KilnModelError: Error, LocalizedError {
 /// retrofitting it through every call site that assumed the first one. Introducing it
 /// now costs one file and makes each new provider an additive change.
 ///
-/// It is modelled on the shape a provider-agnostic session API needs, informed by the
-/// `LanguageModel` protocol Apple introduced at WWDC 2026. It is **not** a claim about
-/// that API's signature — Kiln targets iOS 26 and owns this protocol. When we adopt the
-/// system protocol, `AppleIntelligenceModel` becomes a thin bridge and views do not
-/// change. See ADR-002.
+/// iOS 27 tested that claim and it held: adopting the new `FoundationModels` surface
+/// changed `AppleIntelligenceModel` and nothing above it. Note what the seam is *not* —
+/// iOS 27's own `LanguageModel` protocol is a model *descriptor* paired with a
+/// `LanguageModelExecutor`, the path for supplying a custom model to a
+/// `LanguageModelSession`. That is the Neural/MLX story, not this one. See ADR-002.
 protocol KilnModel: Sendable {
     /// Stable identifier used for run records and provider selection.
     var identifier: String { get }
@@ -138,10 +238,26 @@ protocol KilnModel: Sendable {
     /// property read at call time rather than a value cached at init.
     var availability: KilnModelAvailability { get }
 
-    /// Run a single prompt and return the complete response.
+    /// What this provider can do. Read at call time for the same reason as availability.
+    var capabilities: Set<KilnModelCapability> { get }
+
+    /// Run a single prompt and return the complete response with its evidence.
     ///
-    /// Streaming is deliberately absent from the first cut. It is a different shape
+    /// Streaming is still deliberately absent. It is a different shape
     /// (`AsyncSequence`) and adding it before there are two providers to compare would
     /// be designing the seam against one implementation.
-    func respond(to prompt: String, instructions: String?) async throws -> String
+    func run(_ prompt: String,
+             instructions: String?,
+             options: KilnRunOptions) async throws -> KilnRun
+}
+
+extension KilnModel {
+    /// Convenience for the common case — a bare prompt with default options.
+    func run(_ prompt: String) async throws -> KilnRun {
+        try await run(prompt, instructions: nil, options: .default)
+    }
+
+    func supports(_ capability: KilnModelCapability) -> Bool {
+        capabilities.contains(capability)
+    }
 }

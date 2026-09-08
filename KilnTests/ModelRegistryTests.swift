@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import Kiln
 
 /// A stub provider. Tests here are deterministic on purpose — nothing in this file
@@ -8,9 +9,18 @@ private struct StubModel: KilnModel {
     let identifier: String
     let displayName: String
     var availability: KilnModelAvailability = .available
+    var capabilities: Set<KilnModelCapability> = [.toolCalling]
 
-    func respond(to prompt: String, instructions: String?) async throws -> String {
-        "echo: \(prompt)"
+    func run(_ prompt: String,
+             instructions: String?,
+             options: KilnRunOptions) async throws -> KilnRun {
+        KilnRun(
+            content: "echo: \(prompt)",
+            usage: KilnTokenUsage(inputTokens: 1, cachedInputTokens: 0,
+                                  outputTokens: 1, reasoningTokens: 0),
+            entries: [.prompt, .response],
+            duration: .milliseconds(1)
+        )
     }
 }
 
@@ -75,5 +85,42 @@ struct KilnModelAvailabilityTests {
         #expect(!notReady.isAvailable)
         #expect(notReady.reason == "still downloading")
         #expect(unsupported != notReady)
+    }
+}
+
+/// Capability is the third stage of the chain ADR-003 started with two: available →
+/// capable → generated. macOS 27 supplies the live example — the system model reports
+/// `.available` and advertises tool calling, vision and guided generation, but not
+/// reasoning, so a reasoning request fails after a clean availability pre-flight.
+@Suite("KilnModelCapability")
+struct KilnModelCapabilityTests {
+    @Test("supports reflects the advertised set")
+    func supportsReflectsSet() {
+        let model = StubModel(identifier: "a", displayName: "A",
+                              capabilities: [.toolCalling, .vision])
+
+        #expect(model.supports(.toolCalling))
+        #expect(model.supports(.vision))
+        #expect(!model.supports(.reasoning))
+        #expect(!model.supports(.guidedGeneration))
+    }
+
+    @Test("a model advertising nothing supports nothing")
+    func emptyCapabilities() {
+        let model = StubModel(identifier: "a", displayName: "A", capabilities: [])
+
+        for capability in KilnModelCapability.allCases {
+            #expect(!model.supports(capability), "\(capability) should not be supported")
+        }
+    }
+
+    @Test("the convenience run overload uses default options")
+    func convenienceRun() async throws {
+        let model = StubModel(identifier: "a", displayName: "A")
+
+        let run = try await model.run("hello")
+
+        #expect(run.content == "echo: hello")
+        #expect(run.entries == [.prompt, .response])
     }
 }
