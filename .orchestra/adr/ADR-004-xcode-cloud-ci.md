@@ -205,3 +205,33 @@ the first time one is added.
   Its comment block names them so that day is a lookup rather than a rediscovery.
 - Local `./scripts/run-tests.sh` stays the fast inner loop and works offline. Only the
   gate is coupled to Apple's infrastructure.
+
+---
+
+## Amendment — 2026-09-08: the toolchain is Cloud's, and it lags the local one
+
+Adopting iOS/macOS 27 broke CI on the first PR, and the shape of the breakage is worth
+recording because nothing in this repository could have prevented it.
+
+**The Xcode version is not a repository fact.** `project.yml`'s `xcodeVersion` only stamps
+XcodeGen's compatibility marker; it gates nothing. Cloud's Xcode lives in a
+`ciXcodeVersions` relationship on the workflow in App Store Connect. So local can move to
+a new Xcode and CI will keep compiling against the old SDK until someone changes it there
+— failing with dozens of "cannot find type in scope" errors that read like the code is
+wrong when the toolchain is simply older.
+
+**The build machine's macOS is a second, independent pin, and it is the harder one.**
+Cloud offers a `ciMacOsVersions` list that lags the OS release: while Kiln moved to a
+macOS 27.0 deployment target, Cloud's newest image — including the "Latest Beta or
+Release" alias — was macOS Tahoe 26.6.2.
+
+That combination has a consequence worth stating plainly: **a macOS test action cannot run
+a binary whose deployment target exceeds the build machine's OS.** No Xcode selection fixes
+it. iOS is unaffected, because those tests run in a Simulator runtime the newer Xcode
+supplies rather than on the host OS.
+
+So the deployment target is a CI decision as much as a product one. Raising it to an OS
+Cloud has no image for retires the macOS half of the gate until Apple ships that image,
+which in practice means after the OS is public. Kiln accepted that deliberately, on a lab
+whose primary surface is local, but it should be a conscious trade rather than a surprise
+— and `./scripts/run-tests.sh` carries the macOS signal in the meantime.
