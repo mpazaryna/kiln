@@ -93,6 +93,35 @@ targets:
         ENABLE_HARDENED_RUNTIME: true
         ENABLE_APP_SANDBOX: true
 
+  # A command-line probe for poking the FoundationModels API directly.
+  #
+  # It compiles Kiln's own Intelligence layer — not a copy of it — so what the probe
+  # observes is what the app will do. Deliberately NOT sandboxed and with no
+  # entitlements: it exists to answer questions about the framework (what does this
+  # machine advertise? what does that error actually map to?) without launching a GUI,
+  # and a sandbox would just add a second variable to every answer.
+  #
+  #   xcodebuild -project Kiln.xcodeproj -scheme KilnProbe -configuration Debug build
+  #   ./scripts/probe.sh capabilities
+  KilnProbe:
+    type: tool
+    platform: macOS
+    sources:
+      - path: KilnProbe
+        excludes:
+          - "**/.DS_Store"
+      - path: Kiln/Core/Intelligence
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_NAME: KilnProbe
+        PRODUCT_BUNDLE_IDENTIFIER: land.paz.KilnProbe
+        CODE_SIGN_ENTITLEMENTS: ""
+        ENABLE_APP_SANDBOX: false
+        ENABLE_HARDENED_RUNTIME: false
+        SWIFT_VERSION: "6.0"
+
   KilnTests-iOS:
     type: bundle.unit-test
     platform: iOS
@@ -128,6 +157,19 @@ targets:
       - target: Kiln-macOS
 
 schemes:
+  KilnProbe:
+    build:
+      targets:
+        KilnProbe: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
   Kiln-iOS:
     build:
       targets:

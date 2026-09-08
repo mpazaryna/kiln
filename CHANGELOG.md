@@ -34,6 +34,8 @@ in `.orchestra/devlog/` instead.
   between the two is the experiment: asked for cone 06 with the tool allowed the model
   answers 1828 °F and the transcript reads `toolCalls → toolOutput → response`; with
   calls disallowed it answers 1,100 °F from memory and the transcript reads `response`.
+- `KilnProbe`, a command-line target that links `Core/Intelligence` and answers questions
+  about the framework without launching the GUI — `./scripts/probe.sh capabilities`.
 
 - `Hello, Kiln` — a prompt, a Fire button, and a response, on iOS and macOS. The whole
   app so far, and deliberately so: it establishes config-driven layout, enum view state,
