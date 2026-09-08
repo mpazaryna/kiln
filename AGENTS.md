@@ -50,6 +50,18 @@ pre-flight. Never flatten a failure to `localizedDescription`. Map it to a
 
 **Run live prompts on a real device or the macOS app, not the iOS Simulator.**
 
+To ask the framework a question — what does this machine advertise, does the model call
+the tool, what does that error actually map to — use `./scripts/probe.sh` rather than
+adding a live assertion to the default suite. The probe links `Core/Intelligence`, so
+what it reports is what the app does.
+
+**The probe is unsandboxed, and that is a blind spot.** It cannot validate anything the
+sandbox governs — file access, entitlements, security scopes. Two bugs have already hidden
+there: an image read needs its security scope held open across `respond`, and
+`.fileImporter` needs `com.apple.security.files.user-selected.read-only` or it does nothing
+at all. Both looked fine in the probe. Anything touching files or entitlements has to be
+checked in the installed app.
+
 ### Tests must be deterministic
 
 The default test run must not depend on whether Apple Intelligence is enabled, downloaded,
@@ -95,6 +107,14 @@ xcodegen generate
 ./scripts/run-tests.sh ios          # iOS Simulator, guarded
 ./scripts/run-tests.sh all
 
+./scripts/probe.sh capabilities     # what this machine advertises, on-device and PCC
+./scripts/probe.sh tool             # cone tool offered, calling allowed
+./scripts/probe.sh offered          # same tool, calling disallowed — compare the two
+./scripts/probe.sh reasoning        # request reasoning; fails on-device by design
+./scripts/probe.sh vision [path]    # attach an image (defaults to the app icon)
+./scripts/probe.sh errors           # provoke real failures; check they survive the mapper
+./scripts/probe.sh pcc              # TRAPS without Apple's managed entitlement
+
 xcodebuild -project Kiln.xcodeproj -scheme Kiln-macOS -configuration Debug build
 xcodebuild -project Kiln.xcodeproj -scheme Kiln-iOS -configuration Debug \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
@@ -112,7 +132,9 @@ Kiln/
 ├── Core/
 │   ├── Configuration/        # PlatformConfig.swift — ALL layout values
 │   └── Intelligence/         # KilnModel, AppleIntelligenceModel, ModelRegistry
+│       └── Tools/            # Tool logic (neutral) + its Tool conformance (Apple)
 └── Views/                    # SwiftUI views, one fileprivate config each
+KilnProbe/                    # CLI probe — links Core/Intelligence, not sandboxed
 KilnTests/                    # Deterministic unit tests
 scripts/                      # run-tests.sh, lib/xcresult.sh (shared with CI),
                               # create-xcode-cloud-workflow.sh (ASC API)
