@@ -70,6 +70,15 @@ in `.orchestra/devlog/` instead.
 
 ### Changed
 
+- Controls adapt to width instead of assuming one. Two pickers, a toggle, a button and
+  Fire shared a single `HStack`, which is fine at macOS width and unusable on an iPhone.
+  The layout is now an `AnyLayout` supplied by the config — a row where there is width,
+  a stack where there is not — so the view renders one set of children and contains no
+  size-class check (ADR-000). Fire moved to its own row, full width on compact.
+- Pickers are wrapped in `LabeledContent`. `.menu` style renders only the selected value,
+  so a bare `Picker` in a stack lost its label entirely and floated centred — "Disallowed"
+  with nothing saying what was disallowed.
+
 - `LanguageModelSession.GenerationError` (deprecated in 27) migrated to
   `LanguageModelError`. Not a rename: `assetsUnavailable` moved to
   `SystemLanguageModel.Error`, `concurrentRequests` and `decodingFailure` are gone, and

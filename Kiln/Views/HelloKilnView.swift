@@ -26,6 +26,14 @@ fileprivate struct HelloLayoutConfig {
     let metricSpacing: CGFloat
     let thumbnailSize: CGFloat
 
+    /// Controls sit in a row where there is width for one and stack where there is not.
+    /// The choice is made here, once, so the body renders a single set of children under
+    /// either layout — no `sizeClass ==` in the view (ADR-000).
+    let controlLayout: AnyLayout
+    /// `.infinity` where a control should fill the width, `nil` for its natural size.
+    let controlMaxWidth: CGFloat?
+    let runButtonMaxWidth: CGFloat?
+
     #if os(iOS)
     static func current(_ sizeClass: UserInterfaceSizeClass?) -> Self {
         let base = BasePlatformConfig.current(sizeClass)
@@ -43,7 +51,10 @@ fileprivate struct HelloLayoutConfig {
                 resultMinHeight: 200,
                 controlSpacing: 16,
                 metricSpacing: 14,
-                thumbnailSize: 56
+                thumbnailSize: 56,
+                controlLayout: AnyLayout(HStackLayout(spacing: 16)),
+                controlMaxWidth: nil,
+                runButtonMaxWidth: nil
             )
             : Self(  // iPhone
                 screenPadding: base.screenPadding,
@@ -58,7 +69,10 @@ fileprivate struct HelloLayoutConfig {
                 resultMinHeight: 140,
                 controlSpacing: 12,
                 metricSpacing: 10,
-                thumbnailSize: 44
+                thumbnailSize: 44,
+                controlLayout: AnyLayout(VStackLayout(alignment: .leading, spacing: 12)),
+                controlMaxWidth: .infinity,
+                runButtonMaxWidth: .infinity
             )
     }
     #else
@@ -77,7 +91,10 @@ fileprivate struct HelloLayoutConfig {
             resultMinHeight: 240,
             controlSpacing: 16,
             metricSpacing: 14,
-            thumbnailSize: 56
+            thumbnailSize: 56,
+            controlLayout: AnyLayout(HStackLayout(spacing: 16)),
+            controlMaxWidth: nil,
+            runButtonMaxWidth: nil
         )
     }
     #endif
@@ -133,6 +150,7 @@ struct HelloKilnView: View {
             promptEditor
             controls
             attachments
+            runButton
             result
             Spacer(minLength: 0)
         }
@@ -169,20 +187,34 @@ struct HelloKilnView: View {
     /// the provider cannot honour is shown and disabled, not hidden — knowing the knob
     /// exists and this model ignores it is the comparison a lab is for.
     private var controls: some View {
-        HStack(spacing: config.controlSpacing) {
-            Picker("Tools", selection: $options.toolCalling) {
-                ForEach(KilnToolCalling.allCases, id: \.self) { mode in
-                    Text(mode.rawValue.capitalized).tag(mode)
+        config.controlLayout {
+            // LabeledContent, not a bare Picker: `.menu` style renders only the selected
+            // value, so a Picker dropped into a stack loses its label entirely and floats
+            // centred. LabeledContent puts the name leading and the value trailing, which
+            // is the row shape iOS uses for settings everywhere.
+            LabeledContent("Tools") {
+                Picker("Tools", selection: $options.toolCalling) {
+                    ForEach(KilnToolCalling.allCases, id: \.self) { mode in
+                        Text(mode.rawValue.capitalized).tag(mode)
+                    }
                 }
+                .labelsHidden()
+                .pickerStyle(.menu)
             }
+            .frame(maxWidth: config.controlMaxWidth)
             .disabled(!registry.selected.supports(.toolCalling))
 
-            Picker("Reasoning", selection: $options.reasoning) {
-                Text("Off").tag(KilnReasoningLevel?.none)
-                ForEach(KilnReasoningLevel.allCases, id: \.self) { level in
-                    Text(level.rawValue.capitalized).tag(KilnReasoningLevel?.some(level))
+            LabeledContent("Reasoning") {
+                Picker("Reasoning", selection: $options.reasoning) {
+                    Text("Off").tag(KilnReasoningLevel?.none)
+                    ForEach(KilnReasoningLevel.allCases, id: \.self) { level in
+                        Text(level.rawValue.capitalized).tag(KilnReasoningLevel?.some(level))
+                    }
                 }
+                .labelsHidden()
+                .pickerStyle(.menu)
             }
+            .frame(maxWidth: config.controlMaxWidth)
             .disabled(!registry.selected.supports(.reasoning))
 
             Toggle("Cone tool", isOn: Binding(
@@ -192,15 +224,16 @@ struct HelloKilnView: View {
                     else { options.tools.remove(.coneTemperature) }
                 }
             ))
+            .frame(maxWidth: config.controlMaxWidth)
             .disabled(!registry.selected.supports(.toolCalling))
 
-            Button("Attach image") { isChoosingImage = true }
+            Button("Attach image", systemImage: "photo") { isChoosingImage = true }
+                .frame(maxWidth: config.controlMaxWidth, alignment: .leading)
                 .disabled(!registry.selected.supports(.vision))
-
-            Spacer()
-            runButton
         }
         .controlSize(config.controlSize)
+        .padding(config.cardPadding)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: config.cornerRadius))
         .fileImporter(
             isPresented: $isChoosingImage,
             allowedContentTypes: [.image]
@@ -244,16 +277,22 @@ struct HelloKilnView: View {
         }
     }
 
+    /// The primary action, on its own row. It shared a line with four other controls
+    /// until an iPhone showed what that looks like below 400 points.
     private var runButton: some View {
         Button {
             Task { await run() }
         } label: {
-            if case .running = state {
-                ProgressView()
-            } else {
-                Text("Fire")
+            Group {
+                if case .running = state {
+                    ProgressView()
+                } else {
+                    Text("Fire")
+                }
             }
+            .frame(maxWidth: config.runButtonMaxWidth)
         }
+        .controlSize(config.controlSize)
         .buttonStyle(.borderedProminent)
         .disabled(prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isRunning)
     }
