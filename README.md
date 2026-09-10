@@ -30,6 +30,24 @@ used.
 readable enough to learn the patterns from, installable enough to see running without
 cloning it.
 
+## Related work
+
+Kiln works in a similar way to Rudrank Riyam's
+[Foundation Lab](https://github.com/rudrankriyam/Foundation-Models-Framework-Lab): a native
+iOS and macOS workbench for Apple's Foundation Models framework, built so that a run is
+inspected rather than just read. What comes back is the answer together with the evidence
+around it: tool calls, the transcript, and token usage. Both ship through TestFlight, and
+both work with the OS 27 SDK.
+
+Foundation Lab is the broad one: editable recipes, guided labs for individual APIs,
+network-backed tools, RAG, Private Cloud Compute, and adapter comparison. Kiln is
+deliberately narrow: on-device only, with no network entitlement, and every model reached
+through one `KilnModel` seam so that a second provider can be compared with the first.
+
+It has also been a reference. Foundation Lab tracks the Xcode 27 beta interface, and
+Kiln's first iOS 27 notes were drawn from it before being verified first-hand — see the
+[2026-08-08 devlog](.orchestra/devlog/2026-Q3/2026-08-08-ios-27-reasoning-drift.md).
+
 ## Status
 
 Early, and still one screen, on both platforms. `Hello, Kiln` sends a prompt to Apple
