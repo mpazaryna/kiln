@@ -23,7 +23,9 @@ contained to the provider and nothing above the seam moving.
 - [x] `usage` and transcript entries carried through the seam rather than discarded
 - [ ] Reasoning exercised end-to-end — **blocked**, see Finding 1: no available model
       advertises the capability on-device
-- [ ] Xcode Cloud builds on Xcode 27 (ADR-004 pipeline is version-pinned)
+- [x] Xcode Cloud builds on Xcode 27 — iOS and macOS archives green on 2026-09-08 with a
+      27.0 deployment target, once the toolchain pin in App Store Connect moved (ADR-004
+      amendment)
 
 ## Context
 
@@ -114,10 +116,10 @@ This is a real coverage loss on the code ADR-003 exists to protect.
 | Suite rebuilt for 27 constructibility | `KilnTests/` | Done |
 | `Tool` conformance + neutral tool identifiers | `Kiln/Core/Intelligence/Tools/` | Done |
 | CLI probe target for API exploration | `KilnProbe/`, `scripts/probe.sh` | Done |
-| ADR-003 amendment — capability stage + testability loss | `.orchestra/adr/` | Not Started |
-| ADR-002 amendment — `LanguageModel` is the Neural path | `.orchestra/adr/` | Not Started |
+| ADR-003 amendment — capability stage + testability loss | `.orchestra/adr/ADR-003-availability-is-not-sufficiency.md` | Done |
+| ADR-002 amendment — `LanguageModel` is the Neural path | `.orchestra/adr/ADR-002-model-provider-seam.md` | Done |
 | ADR — Private Cloud Compute vs on-device-only | `.orchestra/adr/` | Not Started |
-| Xcode Cloud on Xcode 27 | `ci_scripts/`, ASC workflow | Not Started |
+| Xcode Cloud on Xcode 27 | `ci_scripts/`, ASC workflow | Done |
 
 ## Notes
 
@@ -125,7 +127,10 @@ This is a real coverage loss on the code ADR-003 exists to protect.
 Xcode 27 beta to chase this… held at iOS 26 until every machine can move together."* Every
 machine is now on 27 and the project has moved with them. The reasoning behind the
 constraint was sound and one part of it still stands: the interface is a beta and may
-still move, so `project.yml` now requires Xcode 27 and **Xcode Cloud has not been verified
-against it**. That is the open risk ADR-004 cares about.
+still move, so `project.yml` now requires Xcode 27.
+
+Xcode Cloud has since built both archives against it, green on 2026-09-08. What Cloud does
+not do is test. Only its archive actions report to GitHub, and a macOS test action would
+need a macOS 27 build image that Cloud does not yet offer (ADR-004 amendment).
 
 Tracked as [#6](https://github.com/mpazaryna/kiln/issues/6); the defect itself is [#7](https://github.com/mpazaryna/kiln/issues/7).

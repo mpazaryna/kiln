@@ -147,6 +147,9 @@ wins — record what actually happened, not what the docs imply.
 
 ## Workflow topology
 
+> **This is the design, not what runs.** Only an archive-only `Default` workflow exists — see
+> the [2026-09-10 amendment](#amendment--2026-09-10-no-test-action-runs-in-xcode-cloud).
+
 | Workflow | Start condition | Actions |
 |---|---|---|
 | `PR Gate` | **pull requests targeting `main`** | Build + Test (both platforms) |
@@ -235,3 +238,35 @@ Cloud has no image for retires the macOS half of the gate until Apple ships that
 which in practice means after the OS is public. Kiln accepted that deliberately, on a lab
 whose primary surface is local, but it should be a conscious trade rather than a surprise
 — and `./scripts/run-tests.sh` carries the macOS signal in the meantime.
+
+---
+
+## Amendment — 2026-09-10: no test action runs in Xcode Cloud
+
+The topology above is the design. It is not what runs, and nothing in this repository's
+history shows it ever running.
+
+**What runs.** One workflow, `Default`, with two actions: Archive - iOS and Archive -
+macOS. Its check runs appear on 14 of the 28 commits on `main`, the first on 2026-08-08.
+Across all of them there is no test action and no `PR Gate`, and no pull request has
+received a check. The developer confirmed on 2026-09-10 that no tests run in Cloud.
+
+**What that leaves of this ADR's claims:**
+
+- **The zero-test guard is written, and never runs.** `ci_post_xcodebuild.sh` exits early
+  for any action that is not a test, correctly, so on an archive-only workflow it reports
+  "guard not applicable" every time. Sharing `scripts/lib/xcresult.sh` keeps it from
+  drifting from the local runner; nothing yet proves it works in Cloud.
+- **A green check on `main` means both archives built from a clean clone.** That is the
+  first half of "compiles from clean, and N tests actually ran". There is no N.
+- **Pull requests are not gated.** The decision to trigger on pull requests rather than
+  branch names is sound, and describes a workflow that does not exist.
+- **`./scripts/run-tests.sh` is the only test signal**, and it runs only when someone runs
+  it.
+
+**Restoring the gate is smaller than the 2026-09-08 amendment makes it sound.** An iOS test
+action runs in a Simulator runtime the selected Xcode supplies, so the missing macOS 27
+image blocks only the macOS half. `scripts/create-xcode-cloud-workflow.sh` can create the
+workflow from a JSON definition rather than through the onboarding assistant. Until one
+exists, Stage 2 and the `PR Gate` are a plan rather than a practice, and the roadmap says
+so.
