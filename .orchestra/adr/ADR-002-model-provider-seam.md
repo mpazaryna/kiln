@@ -135,7 +135,7 @@ protocol's signature," and that caution turned out to be load-bearing. The seam 
 precisely because it was designed against what Kiln needs rather than against a guess at
 Apple's shape.
 
-**Consequence for Neural (SHE-27):** `LanguageModel` + `LanguageModelExecutor` is Apple's
+**Consequence for Neural ([#5](https://github.com/mpazaryna/kiln/issues/5)):** `LanguageModel` + `LanguageModelExecutor` is Apple's
 sanctioned custom-provider path, so an MLX provider has two possible homes — beside
 `KilnModel` as a second conformance, or underneath `LanguageModelSession` as an executor.
 The second gets tools, guided generation and transcript handling for free and makes MLX

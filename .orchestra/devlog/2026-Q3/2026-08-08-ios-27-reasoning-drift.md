@@ -8,7 +8,7 @@ created_on: 2026-08-08
 
 An iPad was updated to iOS 27 beta 3. The TestFlight build of Kiln already installed on
 it — unchanged, built weeks earlier against the iOS 26 SDK — started answering prompts
-differently. Filed as `SHE-29`. The decision coming out of it: stay on iOS 26 for all
+differently. Filed as [#7](https://github.com/mpazaryna/kiln/issues/7). The decision coming out of it: stay on iOS 26 for all
 work until every machine is on 27.
 
 No code changed today. No tests ran.
@@ -118,6 +118,6 @@ permanent and immutable at upload, and the Xcode-generated workflow preselects
 
 - Verify `buildAudienceType` on the shipped build — the one item here with a deadline that
   has already passed rather than one approaching
-- Write today's finding into `.orchestra/work/ios-27/prd.md` and `neural/prd.md`; Linear
-  currently knows more than the source of truth does
+- Write today's finding into `.orchestra/work/ios-27/prd.md` and `neural/prd.md`; the
+  ticket currently knows more than the source of truth does
 - The MLX / Xcode Cloud spike remains open and is untouched by the iOS 27 hold

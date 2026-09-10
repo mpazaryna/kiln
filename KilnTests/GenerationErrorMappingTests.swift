@@ -72,7 +72,7 @@ struct GenerationErrorMappingTests {
 
     // MARK: - Request mapping
 
-    /// Kiln registers no tools, so `.disallowed` is the default. The SHE-29 finding was a
+    /// Kiln registers no tools, so `.disallowed` is the default. Issue #7 was a
     /// session with zero tools narrating a search for tools into its answer.
     @Test("tool calling defaults to disallowed")
     func toolCallingDefaultsToDisallowed() {

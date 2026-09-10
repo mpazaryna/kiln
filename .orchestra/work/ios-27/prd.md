@@ -1,5 +1,5 @@
 ---
-ticket: SHE-28
+ticket: "#6"
 status: draft
 created_on: 2026-08-08
 ---
@@ -13,7 +13,7 @@ contained to the provider and nothing above the seam moving.
 > **Superseded objective (2026-08-08):** *"Adopt the system `LanguageModel` protocol.
 > `AppleIntelligenceModel` becomes a bridge."* That was aimed at the wrong protocol. See
 > **Finding 3** below: `LanguageModel` is the custom-provider path and belongs to Neural
-> (SHE-27), not here.
+> ([#5](https://github.com/mpazaryna/kiln/issues/5)), not here.
 
 ## Success Criteria
 
@@ -72,7 +72,7 @@ exist but belong to another model. `PrivateCloudComputeLanguageModel` is the lik
 candidate — and it is off-device, which puts it against the on-device-only rule in
 `AGENTS.md`. **Open question, ADR before code.**
 
-### 2. SHE-29 did not reproduce on macOS 27
+### 2. [#7](https://github.com/mpazaryna/kiln/issues/7) did not reproduce on macOS 27
 
 Clean answer, no tool-search preamble, `reasoningTokenCount = 0`, only a `.response`
 entry. `toolCallingMode = .disallowed` changed nothing measurable (65 in / 39 out either
@@ -91,7 +91,7 @@ public protocol LanguageModel: Sendable {
 
 Paired with a `LanguageModelExecutor` that does the work; the path for supplying a custom
 model *into* a `LanguageModelSession`. Apple Intelligence already is the system model, so
-`AppleIntelligenceModel` does not conform to it. **This is the Neural (SHE-27) path.**
+`AppleIntelligenceModel` does not conform to it. **This is the Neural ([#5](https://github.com/mpazaryna/kiln/issues/5)) path.**
 
 ### 4. The error taxonomy shifted, and is no longer constructible in tests
 
@@ -128,4 +128,4 @@ constraint was sound and one part of it still stands: the interface is a beta an
 still move, so `project.yml` now requires Xcode 27 and **Xcode Cloud has not been verified
 against it**. That is the open risk ADR-004 cares about.
 
-Tracked as SHE-28; the defect itself is SHE-29.
+Tracked as [#6](https://github.com/mpazaryna/kiln/issues/6); the defect itself is [#7](https://github.com/mpazaryna/kiln/issues/7).

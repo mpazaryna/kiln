@@ -50,7 +50,7 @@ error's own wording points at one. `PrivateCloudComputeLanguageModel` is the obv
 candidate and is off-device by definition, which puts it against the on-device-only rule
 in `AGENTS.md`. That is an ADR decision, not a quiet import.
 
-### 2. SHE-29 did not reproduce
+### 2. [#7](https://github.com/mpazaryna/kiln/issues/7) did not reproduce
 
 The default prompt returned a clean two-sentence answer with no "checking if there is any
 tool available" preamble, `reasoningTokenCount = 0`, and only a `.response` transcript
@@ -140,4 +140,4 @@ Kiln supplying its own recovery text is doing more work under iOS 27, not less.
   it is off-device. ADR before code
 - Check whether Xcode Cloud offers Xcode 27 before this reaches CI — `project.yml` now
   requires it, and ADR-004's pipeline is pinned
-- SHE-29 stays open: unreproduced on macOS 27, not disproven
+- [#7](https://github.com/mpazaryna/kiln/issues/7) stays open: unreproduced on macOS 27, not disproven

@@ -87,9 +87,10 @@ comment is read by someone learning from it, because that is the point.
 **Never crosses over** — client data, proprietary models, credentials, and anything from
 private projects that would leak a client's business rather than teach a technique.
 
-**Fine to include** — Linear ticket references (`SHE-24`), issue URLs, and links to the
-workshed project. They are identifiers for planning, not secrets, and a reader who
-cannot open them loses nothing from the code.
+**Fine to include** — issue references and issue URLs. They are identifiers for planning,
+not secrets. In repository files write them as links,
+`[#2](https://github.com/mpazaryna/kiln/issues/2)`: GitHub turns a bare `#2` into a link
+only in issues and pull requests, never in a rendered file.
 
 The earlier blanket ban on "internal identifiers" swept up ticket references along with
 the things that actually matter, which made it a rule to step over rather than follow. A
@@ -177,6 +178,7 @@ Record sessions with `orchestra_devlog_entry` (write the file it returns to
 - `ADR-003-availability-is-not-sufficiency` — failure mapping; Simulator asset caveat
 - `ADR-004-xcode-cloud-ci` — CI staging, zero-test guard, Distribution Preparation trap
 - `ADR-005-the-score` — the Orchestra SDLC itself; why the score is not ADR-000 here
+- `ADR-006-tickets-in-github-issues` — tickets live in GitHub Issues; maps the retired `SHE-*` IDs
 
 ---
 

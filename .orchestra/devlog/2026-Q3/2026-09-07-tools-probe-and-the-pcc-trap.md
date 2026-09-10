@@ -18,7 +18,7 @@ managed entitlement is missing.** It does not throw. There is no defensive handl
 After the migration Kiln *displayed* four capabilities and could exercise none of them.
 The header read "Tool calling · Vision · Guided generation" and there was no way to try
 any. `toolCallingMode` was a knob wired to nothing, because Kiln registers no tools — so
-the SHE-29 experiment ("does `.disallowed` change anything?") was meaningless by
+the [#7](https://github.com/mpazaryna/kiln/issues/7) experiment ("does `.disallowed` change anything?") was meaningless by
 construction.
 
 `ConeTemperatureTool` fixes that, and cone numbering makes it a genuinely good test
