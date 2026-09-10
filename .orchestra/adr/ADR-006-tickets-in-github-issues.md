@@ -30,12 +30,12 @@ the defect became an issue labelled `bug`.
 
 | Linear | GitHub | Work item |
 |---|---|---|
-| SHE-24 | #2 | Language |
-| SHE-25 | #3 | Distribution |
-| SHE-26 | #4 | Workbench |
-| SHE-27 | #5 | Neural |
-| SHE-28 | #6 | iOS 27 |
-| SHE-29 | #7 | Defect: a session with zero tools narrates a search for tools |
+| SHE-24 | [#2](https://github.com/mpazaryna/kiln/issues/2) | Language |
+| SHE-25 | [#3](https://github.com/mpazaryna/kiln/issues/3) | Distribution |
+| SHE-26 | [#4](https://github.com/mpazaryna/kiln/issues/4) | Workbench |
+| SHE-27 | [#5](https://github.com/mpazaryna/kiln/issues/5) | Neural |
+| SHE-28 | [#6](https://github.com/mpazaryna/kiln/issues/6) | iOS 27 |
+| SHE-29 | [#7](https://github.com/mpazaryna/kiln/issues/7) | Defect: a session with zero tools narrates a search for tools |
 
 ## Consequences
 
@@ -43,8 +43,12 @@ the defect became an issue labelled `bug`.
   unquoted `#` starts a YAML comment, and the field would read as empty.
 - New work gets a roadmap row and a PRD first, then an issue — the same order as before,
   with `gh issue create` in place of Linear.
-- Dated devlogs keep their `SHE-*` references as written. They are records of the day they
-  describe, and the table above resolves them.
+- This table is the only place the `SHE-*` IDs remain. Every other reference, dated
+  devlogs included, now links to its issue: an ID pointing into a workspace no reader can
+  open tells them nothing. A devlog is still a record of its day; the ticket it names is
+  the one thing that moved. The issue bodies dropped their "Migrated from Linear" line for
+  the same reason.
 - Live documents — the roadmap, PRDs, ADR-002, `AGENTS.md`, the Unreleased changelog, and
-  two code comments — cite `#N`.
+  two code comments — cite `#N`. In Markdown it is written as a link, because GitHub turns
+  a bare `#N` into one only in issues and pull requests, never in a rendered file.
 - The Linear project is retired. Archiving it happens in Linear, outside this repository.

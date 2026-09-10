@@ -87,9 +87,10 @@ comment is read by someone learning from it, because that is the point.
 **Never crosses over** — client data, proprietary models, credentials, and anything from
 private projects that would leak a client's business rather than teach a technique.
 
-**Fine to include** — issue references (`#2`), issue URLs, and the retired Linear IDs
-(`SHE-24`) that dated devlogs still carry. They are identifiers for planning, not secrets,
-and a reader who cannot open them loses nothing from the code.
+**Fine to include** — issue references and issue URLs. They are identifiers for planning,
+not secrets. In repository files write them as links,
+`[#2](https://github.com/mpazaryna/kiln/issues/2)`: GitHub turns a bare `#2` into a link
+only in issues and pull requests, never in a rendered file.
 
 The earlier blanket ban on "internal identifiers" swept up ticket references along with
 the things that actually matter, which made it a rule to step over rather than follow. A

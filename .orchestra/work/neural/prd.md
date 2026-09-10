@@ -86,5 +86,5 @@ in which case the spike gets much shorter.
 
 Run /orchestra-plan neural to start the planning loop for this milestone.
 
-Tracked as #5. Session write-up:
+Tracked as [#5](https://github.com/mpazaryna/kiln/issues/5). Session write-up:
 [`devlog/2026-Q3/2026-08-08-ios-27-reasoning-drift.md`](../../devlog/2026-Q3/2026-08-08-ios-27-reasoning-drift.md).

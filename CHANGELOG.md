@@ -85,7 +85,7 @@ in `.orchestra/devlog/` instead.
   `timeout` / `unsupportedCapability` / `unsupportedTranscriptContent` arrived. Kiln keeps
   the departed cases — they still describe how a provider can fail.
 - Tool calling now defaults to `.disallowed`. Kiln registers no tools, so a tool search is
-  pure waste (#7).
+  pure waste ([#7](https://github.com/mpazaryna/kiln/issues/7)).
 - Tests rebuilt around what iOS 27 leaves constructible. The new error payloads have no
   public initializers, so ADR-003's "construct the error, assert the mapping" pattern no
   longer works; `LanguageModelSession.Usage` still does, so token mapping stays covered.
@@ -93,8 +93,10 @@ in `.orchestra/devlog/` instead.
   proprietary models, credentials) from what it had swept up by accident (Linear ticket
   references). A hard rule that is routinely stepped over costs the rules beside it
   their weight.
-- Tickets moved from Linear to GitHub Issues (#2–#7). `roadmap.md` stays the source of
-  truth; ADR-006 maps the old `SHE-*` IDs, which dated devlogs keep as written.
+- Tickets moved from Linear to GitHub Issues
+  ([#2–#7](https://github.com/mpazaryna/kiln/issues)). `roadmap.md` stays the source of
+  truth. ADR-006 maps the old `SHE-*` IDs; every reference to one, dated devlogs included,
+  now links to its issue instead.
 
 ### Security
 
