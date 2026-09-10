@@ -64,6 +64,9 @@ in `.orchestra/devlog/` instead.
 
 ### Changed
 
+- The controls panel uses Liquid Glass instead of a flat fill
+  ([#11](https://github.com/mpazaryna/kiln/issues/11)). Only the controls: the prompt and
+  response panels hold text, and keep their `.quaternary` background.
 - Controls adapt to width instead of assuming one. Two pickers, a toggle, a button and
   Fire shared a single `HStack`, which is fine at macOS width and unusable on an iPhone.
   The layout is now an `AnyLayout` supplied by the config — a row where there is width,
