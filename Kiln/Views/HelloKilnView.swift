@@ -301,12 +301,14 @@ struct HelloKilnView: View {
     private var result: some View {
         switch state {
         case .idle:
+            // Full width, like every other state. The body stacks with leading alignment,
+            // so a view that only sets a height shrinks to its content and hugs the left.
             ContentUnavailableView(
                 "Nothing fired yet",
                 systemImage: "flame",
                 description: Text(availabilityNote)
             )
-            .frame(minHeight: config.resultMinHeight)
+            .frame(maxWidth: .infinity, minHeight: config.resultMinHeight)
 
         case .running:
             ProgressView("Firing…")
@@ -335,6 +337,7 @@ struct HelloKilnView: View {
                         systemImage: "exclamationmark.triangle",
                         description: failure.recovery.map(Text.init)
                     )
+                    .frame(maxWidth: .infinity)
 
                     if let detail = failure.detail {
                         // Shown, not hidden behind a disclosure. In a lab the raw
