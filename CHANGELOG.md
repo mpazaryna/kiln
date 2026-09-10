@@ -96,6 +96,10 @@ in `.orchestra/devlog/` instead.
   ([#2–#7](https://github.com/mpazaryna/kiln/issues)). `roadmap.md` stays the source of
   truth. ADR-006 maps the old `SHE-*` IDs; every reference to one, dated devlogs included,
   now links to its issue instead.
+- The empty state is centred under the panels instead of hugging the left edge. It set
+  only a height inside a leading-aligned stack, so it shrank to its text; the running
+  state already filled the width. The failure state had the same shape and gets the
+  same fix.
 
 ### Security
 
