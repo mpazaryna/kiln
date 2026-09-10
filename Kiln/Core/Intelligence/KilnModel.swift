@@ -53,7 +53,7 @@ enum KilnReasoningLevel: String, CaseIterable, Sendable {
 }
 
 /// Whether the model may call tools. Kiln registers none, so `.disallowed` is the honest
-/// default — see the SHE-29 finding, where a session with zero tools narrated a search
+/// default — see issue #7, where a session with zero tools narrated a search
 /// for tools and put that narration in the answer.
 enum KilnToolCalling: String, CaseIterable, Sendable {
     case allowed, disallowed
