@@ -32,9 +32,22 @@ cloning it.
 
 ## Status
 
-Early. `Hello, Kiln` runs a prompt against Apple Intelligence and shows the response, on
-both platforms. That is the whole app today, and it is enough to have established the
-three patterns everything else inherits.
+Early, and still one screen, on both platforms. `Hello, Kiln` sends a prompt to Apple
+Intelligence and shows the answer with the evidence around it: input and output tokens,
+duration, and the transcript's entry kinds — `toolCalls → toolOutput → response` when the
+model used a tool, `response` alone when it answered from memory.
+
+The controls are read from what the model says it can do. One it cannot honour is shown
+disabled rather than hidden:
+
+- **Tools** — whether the model may call tools at all
+- **Cone tool** — offer a tool that converts an Orton cone to its firing temperature
+- **Reasoning** — disabled today, because the on-device model does not support it
+- **Attach image** — send a picture along with the prompt
+
+`KilnProbe` asks the framework the same questions from the command line
+(`./scripts/probe.sh`). A second provider to compare against is the point of the lab, and
+it is still ahead — see the [roadmap](.orchestra/roadmap.md).
 
 ## Requirements
 
