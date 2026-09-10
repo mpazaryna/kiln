@@ -131,6 +131,23 @@ Never edit `Kiln.xcodeproj` directly — it is regenerated from `project.yml` on
 build. Add sources by creating files (they are auto-discovered) and packages by editing
 `project.yml`.
 
+### Run it
+
+```bash
+./scripts/run-app.sh                               # build the macOS app and launch it
+./scripts/run-app.sh --light                       # the same, in light appearance
+./scripts/run-app.sh --screenshot build/kiln.png   # also capture the Kiln window
+./scripts/run-tests.sh                             # the guarded test suite
+./scripts/probe.sh capabilities                    # what this Mac's model advertises
+```
+
+The scripts pick their own Xcode. If the terminal's selected Xcode is older than the
+`xcodeVersion` in `project.yml`, they use one in `/Applications` that is new enough, so a
+Mac with Xcode 27 installed as `Xcode-beta.app` still builds. Set `DEVELOPER_DIR` to choose
+one yourself. Plain `xcodebuild`, as above, uses whatever `xcode-select` points at.
+
+For an iPhone, run the `Kiln-iOS` scheme from Xcode on the device.
+
 ## How it is built
 
 Three decisions do most of the work, and each is written down.

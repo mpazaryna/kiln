@@ -8,6 +8,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# shellcheck source=lib/toolchain.sh
+. "$ROOT/scripts/lib/toolchain.sh"
+select_xcode "$ROOT"
+
 command -v xcodegen >/dev/null 2>&1 && xcodegen generate --quiet
 
 BUILD_DIR="$ROOT/build/probe"

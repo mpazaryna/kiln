@@ -108,6 +108,9 @@ xcodegen generate
 ./scripts/run-tests.sh ios          # iOS Simulator, guarded
 ./scripts/run-tests.sh all
 
+./scripts/run-app.sh                # build and launch the macOS app
+./scripts/run-app.sh --light --screenshot build/kiln.png   # light appearance, capture the window
+
 ./scripts/probe.sh capabilities     # what this machine advertises, on-device and PCC
 ./scripts/probe.sh tool             # cone tool offered, calling allowed
 ./scripts/probe.sh offered          # same tool, calling disallowed — compare the two

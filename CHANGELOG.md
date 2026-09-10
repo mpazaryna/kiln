@@ -35,7 +35,6 @@ in `.orchestra/devlog/` instead.
   reviewable as a diff.
 - `.orchestra/` knowledge base — ADR-000 through ADR-005, a five-milestone roadmap, stub
   PRDs, and a devlog.
-
 - macOS/iOS 27 support on the new `FoundationModels` surface. `KilnModel` gained
   `capabilities`, read from the framework at call time — availability says the provider
   will take a request, capability says it will take *this* one (ADR-003 amendment).
@@ -61,6 +60,10 @@ in `.orchestra/devlog/` instead.
   pre-flight is a loop rather than a list of special cases. The provider holds the
   security scope open across the read, which a sandboxed app needs and the unsandboxed
   probe never revealed.
+- `scripts/run-app.sh` builds the macOS app and launches it, optionally in light
+  appearance and with a screenshot of the Kiln window alone. The scripts now choose their
+  own Xcode from `project.yml`'s `xcodeVersion`, so a terminal still pointed at an older
+  Xcode no longer builds Kiln against the wrong SDK.
 
 ### Changed
 

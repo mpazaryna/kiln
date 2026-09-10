@@ -18,6 +18,9 @@ cd "$ROOT"
 
 # shellcheck source=lib/xcresult.sh
 . "$ROOT/scripts/lib/xcresult.sh"
+# shellcheck source=lib/toolchain.sh
+. "$ROOT/scripts/lib/toolchain.sh"
+select_xcode "$ROOT" || exit 1
 
 MODE="${1:-macos}"
 IOS_DESTINATION="${KILN_IOS_DESTINATION:-platform=iOS Simulator,name=iPhone 17 Pro}"
