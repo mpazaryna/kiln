@@ -424,7 +424,16 @@ struct HelloKilnView: View {
     }
 }
 
-#Preview("Hello Kiln") {
+// Both appearances, pinned, so the canvas shows them side by side. Contrast is checked here
+// without switching the whole Mac, and the app itself still follows the system.
+#Preview("Hello Kiln · Light") {
     HelloKilnView()
         .environment(ModelRegistry())
+        .preferredColorScheme(.light)
+}
+
+#Preview("Hello Kiln · Dark") {
+    HelloKilnView()
+        .environment(ModelRegistry())
+        .preferredColorScheme(.dark)
 }
