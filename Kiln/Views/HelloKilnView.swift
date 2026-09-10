@@ -233,7 +233,9 @@ struct HelloKilnView: View {
         }
         .controlSize(config.controlSize)
         .padding(config.cardPadding)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: config.cornerRadius))
+        // Glass on the controls only. The prompt and response panels hold text that has to
+        // read clearly, so they keep a flat `.quaternary` fill (#11).
+        .glassEffect(in: RoundedRectangle(cornerRadius: config.cornerRadius))
         .fileImporter(
             isPresented: $isChoosingImage,
             allowedContentTypes: [.image]

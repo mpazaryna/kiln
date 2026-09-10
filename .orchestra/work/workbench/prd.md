@@ -26,7 +26,7 @@ layout values go in config structs per
 
 | Material | Location | Status |
 |----------|----------|--------|
-| To be defined | | Not Started |
+| Liquid Glass on the controls panel ([#11](https://github.com/mpazaryna/kiln/issues/11)) | `Kiln/Views/HelloKilnView.swift` | Done |
 
 ## Notes
 
