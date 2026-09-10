@@ -126,6 +126,14 @@ Kiln/
 └── Views/                    # SwiftUI views, one local config each
 ```
 
+## How the work is run
+
+The plan lives beside the code, in [`.orchestra/`](.orchestra/README.md). Start at the
+[roadmap](.orchestra/roadmap.md): five milestones, each with its own PRD and a
+[GitHub issue](https://github.com/mpazaryna/kiln/issues) that tracks it. Decisions are
+[ADRs](.orchestra/adr/), amended rather than rewritten when they turn out to be wrong, and
+the [devlog](.orchestra/devlog/) records what each session found.
+
 ## On-device only
 
 Kiln declares no network entitlement and ships no API keys. Everything runs against
