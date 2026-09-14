@@ -51,16 +51,23 @@ Kiln's first iOS 27 notes were drawn from it before being verified first-hand �
 ## Status
 
 Early, and still one screen, on both platforms. `Hello, Kiln` sends a prompt to Apple
-Intelligence and shows the answer with the evidence around it: input and output tokens,
-duration, and the transcript's entry kinds — `toolCalls → toolOutput → response` when the
-model used a tool, `response` alone when it answered from memory.
+Intelligence and shows the answer with the evidence around it: input, output and
+reasoning tokens (and cached input, when there is any), duration, and the transcript's
+entry kinds — `toolCalls → toolOutput → response` when the model used a tool, `response`
+alone when it answered from memory.
+
+Before anything is fired, the screen names the capabilities the model advertises and
+whether it is available. A failure is shown as a summary, a recovery suggestion, and the
+framework's raw text, not as a generic error.
 
 The controls are read from what the model says it can do. One it cannot honour is shown
-disabled rather than hidden:
+disabled rather than hidden. They sit on a Liquid Glass panel
+([#11](https://github.com/mpazaryna/kiln/issues/11)), in a row where there is width and a
+stack on an iPhone; the prompt and response keep a flat fill, because they hold text:
 
 - **Tools** — whether the model may call tools at all
-- **Cone tool** — offer a tool that converts an Orton cone to its firing temperature
 - **Reasoning** — disabled today, because the on-device model does not support it
+- **Cone tool** — offer a tool that converts an Orton cone to its firing temperature
 - **Attach image** — send a picture along with the prompt
 
 `KilnProbe` asks the framework the same questions from the command line
@@ -102,7 +109,8 @@ settings:
 ```
 
 You will also want your own bundle identifier, since `land.paz.kiln` is already claimed:
-change `bundleIdPrefix` and both `PRODUCT_BUNDLE_IDENTIFIER` values. Re-run
+change `bundleIdPrefix` and every `PRODUCT_BUNDLE_IDENTIFIER` value — the two apps, both
+test bundles, and `KilnProbe`. Re-run
 `xcodegen generate` after either edit.
 
 Or skip signing altogether. Ad-hoc signing builds and tests the macOS app without any
@@ -137,8 +145,10 @@ build. Add sources by creating files (they are auto-discovered) and packages by 
 ./scripts/run-app.sh                               # build the macOS app and launch it
 ./scripts/run-app.sh --light                       # the same, in light appearance
 ./scripts/run-app.sh --screenshot build/kiln.png   # also capture the Kiln window
-./scripts/run-tests.sh                             # the guarded test suite
-./scripts/probe.sh capabilities                    # what this Mac's model advertises
+./scripts/run-tests.sh                             # the guarded test suite, on macOS
+./scripts/run-tests.sh all                         # macOS, then the iOS Simulator (or: ios)
+./scripts/probe.sh capabilities                    # what this Mac advertises, on-device and PCC
+./scripts/probe.sh help                            # an unknown command lists them all
 ```
 
 The scripts pick their own Xcode. If the terminal's selected Xcode is older than the
@@ -171,7 +181,14 @@ Kiln/
 ├── Core/
 │   ├── Configuration/        # PlatformConfig.swift — ALL layout values
 │   └── Intelligence/         # KilnModel seam, providers, registry
+│       └── Tools/            # Tool logic (provider-neutral) and its FoundationModels adapter
 └── Views/                    # SwiftUI views, one local config each
+KilnProbe/                    # Command-line probe — links Core/Intelligence, unsandboxed
+KilnTests/                    # Deterministic unit tests, shared by both platforms
+scripts/                      # run-app, run-tests, probe; lib/ is shared with CI
+ci_scripts/                   # Xcode Cloud hooks (post-clone, post-xcodebuild)
+.orchestra/                   # Roadmap, PRDs, ADRs and devlog — see below
+project.yml                   # XcodeGen spec; Kiln.xcodeproj is generated from it
 ```
 
 ## How the work is run
